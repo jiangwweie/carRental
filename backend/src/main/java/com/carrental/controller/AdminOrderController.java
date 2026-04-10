@@ -42,7 +42,7 @@ public class AdminOrderController {
      * 确认订单
      */
     @PostMapping("/{id}/confirm")
-    public ApiResponse<Map<String, String>> confirm(@PathVariable Long id) {
+    public ApiResponse<?> confirm(@PathVariable Long id) {
         return orderRepository.findById(id)
                 .map(order -> {
                     try {
@@ -63,7 +63,7 @@ public class AdminOrderController {
      * 拒绝订单
      */
     @PostMapping("/{id}/reject")
-    public ApiResponse<Map<String, String>> reject(@PathVariable Long id,
+    public ApiResponse<?> reject(@PathVariable Long id,
                                                     @RequestBody Map<String, String> request) {
         String reason = request.get("reason");
         return orderRepository.findById(id)
@@ -86,7 +86,7 @@ public class AdminOrderController {
      * 标记进行中
      */
     @PostMapping("/{id}/start")
-    public ApiResponse<Map<String, String>> start(@PathVariable Long id) {
+    public ApiResponse<?> start(@PathVariable Long id) {
         return orderRepository.findById(id)
                 .map(order -> {
                     try {
@@ -106,7 +106,7 @@ public class AdminOrderController {
      * 标记完成
      */
     @PostMapping("/{id}/complete")
-    public ApiResponse<Map<String, String>> complete(@PathVariable Long id) {
+    public ApiResponse<?> complete(@PathVariable Long id) {
         return orderRepository.findById(id)
                 .map(order -> {
                     try {

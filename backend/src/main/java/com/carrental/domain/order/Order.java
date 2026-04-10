@@ -1,6 +1,7 @@
 package com.carrental.domain.order;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.math.BigDecimal;
 
 @Getter
+@Setter
 public class Order {
 
     private Long id;

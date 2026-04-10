@@ -96,7 +96,7 @@ public class OrderController {
      * 取消订单
      */
     @PostMapping("/{id}/cancel")
-    public ApiResponse<Map<String, String>> cancelOrder(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ApiResponse<?> cancelOrder(@PathVariable Long id, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         return orderRepository.findById(id)
                 .filter(order -> order.getUserId().equals(userId))

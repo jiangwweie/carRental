@@ -12,10 +12,11 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
+
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -29,7 +30,26 @@ public class AuthService {
     @Value("${admin.password}")
     private String defaultAdminPassword;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    /**
+     * 简单的 SHA-256 密码编码（管理端固定密码登录，足够用）
+     */
+    private String encodePassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("密码编码失败", e);
+        }
+    }
+
+    private boolean matchesPassword(String rawPassword, String encodedPassword) {
+        return encodePassword(rawPassword).equals(encodedPassword);
+    }
 
     /**
      * 微信小程序登录
@@ -49,7 +69,7 @@ public class AuthService {
         // 2. 通过 phoneCode 获取手机号
         String phone;
         try {
-            WxMaPhoneNumberInfo phoneInfo = wxMaService.getUserService().getUserPhoneNumber(command.getPhoneCode());
+            WxMaPhoneNumberInfo phoneInfo = wxMaService.getUserService().getNewPhoneNoInfo(command.getPhoneCode());
             phone = phoneInfo.getPhoneNumber();
         } catch (Exception e) {
             log.error("微信获取手机号失败", e);
@@ -82,13 +102,13 @@ public class AuthService {
             // 首次创建管理员账号
             admin = new User("admin", "admin", "管理员");
             admin.setRole("admin");
-            admin.setPasswordHash(passwordEncoder.encode(defaultAdminPassword));
+            admin.setPasswordHash(encodePassword(defaultAdminPassword));
             admin.setMustChangePwd(true);
             admin = userRepository.save(admin);
         }
 
         // 验证密码
-        if (!passwordEncoder.matches(password, admin.getPasswordHash())) {
+        if (!matchesPassword(password, admin.getPasswordHash())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED.getCode(), "密码错误");
         }
 
