@@ -15,6 +15,44 @@
 
 ## Sprint 1: Demo（当前）
 
+### 2026-04-10 收工 - 产品规划 + 架构更新 + 后端编译修复
+
+**会话阶段**: 全天的需求讨论 + 架构更新 + 规划
+**参与者**: 用户（需求确认）+ Claude Code
+
+#### 完成工作
+- **后端编译修复**（4 个 Java 文件）
+  - AuthService: BCryptPasswordEncoder → SHA-256 简化编码
+  - Order.java: 添加 @Setter
+  - AdminOrderController + OrderController: 泛型修复 ApiResponse<?>
+  - WxJava API: getUserPhoneNumber → getNewPhoneNoInfo
+  - ✅ 后端 45 个 Java 文件全部编译通过
+
+- **产品头脑风暴**
+  - 用户故事从 14 个扩展到 25 个（新增 US-15 ~ US-25）
+  - 完成 4 阶段 Sprint 规划（Demo → 管理 → 优化 → 支付）
+  - 确定 Demo 优先策略：后台管理滞后
+
+- **架构设计更新**（design.md 大重写）
+  - 图片存储：base64 存数据库（MVP）→ v1.5 迁移 OSS
+  - 定价方案：后端算价（防止篡改），MVP: days × weekday_price
+  - 订单-车辆关联：两查询 + 应用层组合
+  - 前端页面架构：11 个页面路由映射
+  - 新增 ADR-008/009/010
+
+- **API 接口文档更新**（api.md 大重写）
+  - 完整覆盖 10 个模块
+  - 每个接口含参数、响应、错误码
+  - 明确标注 MVP vs 延期
+
+- **需求池更新**（backlog.md 按 Sprint 重新组织）
+- **交接文档**（2026-04-10-handoff.md 新建）
+
+#### Git 提交
+- `718ef4e` docs: 产品规划更新 + 后端编译修复 + 架构文档更新
+
+---
+
 ### 已完成
 
 - [x] 后端骨架编译修复（AuthService 密码编码 + Order @Setter + 泛型修复）
