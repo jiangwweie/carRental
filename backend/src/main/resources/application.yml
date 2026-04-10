@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: car-rental
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:car_rental}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.carrental.infrastructure.persistence.dataobject
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+wx:
+  miniapp:
+    appid: ${WX_APPID:placeholder}
+    secret: ${WX_SECRET:placeholder}
+
+jwt:
+  secret: ${JWT_SECRET:change-me-to-a-random-string-in-production}
+  expiration: 604800000  # 7 days in milliseconds
+
+admin:
+  password: ${ADMIN_PASSWORD:admin123}

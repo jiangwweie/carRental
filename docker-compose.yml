@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: car-rental-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: car_rental
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  backend:
+    build: ./backend
+    container_name: car-rental-backend
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: car_rental
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      WX_APPID: ${WX_APPID:-placeholder}
+      WX_SECRET: ${WX_SECRET:-placeholder}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:alpine
+    container_name: car-rental-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend-admin/dist:/usr/share/nginx/html/admin
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

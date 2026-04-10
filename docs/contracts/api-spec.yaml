@@ -1,0 +1,950 @@
+openapi: "3.0.3"
+info:
+  title: 租车应用 API
+  version: "2.0"
+  description: 租车小程序 + PC 管理端 RESTful API
+
+servers:
+  - url: /api/v1
+    description: v1 API
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== 认证模块 ====================
+  /auth/wx-login:
+    post:
+      summary: 微信小程序登录
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WxLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '4001':
+          description: 微信登录失败
+        '4002':
+          description: 手机号获取失败
+
+  /auth/admin-login:
+    post:
+      summary: PC 管理端登录
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+
+  /auth/refresh:
+    post:
+      summary: 刷新 Token
+      tags: [Auth]
+      responses:
+        '200':
+          description: Token 刷新成功
+
+  # ==================== 车辆模块（公开） ====================
+  /vehicles:
+    get:
+      summary: 车辆列表
+      tags: [Vehicle]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/min_price'
+        - $ref: '#/components/parameters/max_price'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/page_size'
+      responses:
+        '200':
+          description: 车辆列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleListResponse'
+
+  /vehicles/{id}:
+    get:
+      summary: 车辆详情
+      tags: [Vehicle]
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 车辆详情
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VehicleDetail'
+        '4004':
+          description: 车辆不存在
+
+  # ==================== 订单模块（用户端） ====================
+  /orders:
+    post:
+      summary: 创建订单
+      tags: [Order]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: 订单创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CreateOrderResult'
+        '5200':
+          description: 时间段冲突
+        '4004':
+          description: 车辆不存在或已下架
+    get:
+      summary: 我的订单列表
+      tags: [Order]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: 订单列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /orders/{id}:
+    get:
+      summary: 订单详情
+      tags: [Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 订单详情
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/OrderDetail'
+        '4004':
+          description: 订单不存在
+
+  /orders/{id}/cancel:
+    post:
+      summary: 取消订单
+      tags: [Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 取消成功
+        '5300':
+          description: 订单状态不允许取消
+
+  /orders/{id}/pay:
+    post:
+      summary: 发起支付（v1.5）
+      tags: [Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 支付参数返回成功
+
+  # ==================== 订阅消息 ====================
+  /subscription/record:
+    post:
+      summary: 记录订阅授权
+      tags: [Subscription]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRecordRequest'
+      responses:
+        '200':
+          description: 授权记录成功
+
+  # ==================== 管理端 - 订单 ====================
+  /admin/orders:
+    get:
+      summary: 订单列表（管理端）
+      tags: [Admin Order]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: vehicle_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: 订单列表
+
+  /admin/orders/{id}/confirm:
+    post:
+      summary: 确认订单
+      tags: [Admin Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 确认成功
+        '5300':
+          description: 订单状态不允许确认
+
+  /admin/orders/{id}/reject:
+    post:
+      summary: 拒绝订单
+      tags: [Admin Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectOrderRequest'
+      responses:
+        '200':
+          description: 拒绝成功
+        '5300':
+          description: 订单状态不允许拒绝
+
+  /admin/orders/{id}/start:
+    post:
+      summary: 标记订单进行中
+      tags: [Admin Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 标记成功
+        '5300':
+          description: 订单状态不允许开始
+
+  /admin/orders/{id}/complete:
+    post:
+      summary: 标记订单完成
+      tags: [Admin Order]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 标记成功
+        '5300':
+          description: 订单状态不允许完成
+
+  # ==================== 管理端 - 车辆 ====================
+  /admin/vehicles:
+    get:
+      summary: 车辆列表（管理端，含下架）
+      tags: [Admin Vehicle]
+      responses:
+        '200':
+          description: 车辆列表
+    post:
+      summary: 创建车辆
+      tags: [Admin Vehicle]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '200':
+          description: 创建成功
+
+  /admin/vehicles/{id}:
+    put:
+      summary: 更新车辆
+      tags: [Admin Vehicle]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '200':
+          description: 更新成功
+        '4004':
+          description: 车辆不存在
+    delete:
+      summary: 删除车辆（软删除）
+      tags: [Admin Vehicle]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 删除成功
+
+  /admin/vehicles/{id}/toggle-status:
+    post:
+      summary: 上下架切换
+      tags: [Admin Vehicle]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 状态切换成功
+        '4004':
+          description: 车辆不存在
+
+  # ==================== 管理端 - 价格设置 ====================
+  /admin/pricing/holidays:
+    get:
+      summary: 节假日列表
+      tags: [Admin Pricing]
+      responses:
+        '200':
+          description: 节假日列表
+    post:
+      summary: 创建节假日
+      tags: [Admin Pricing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHolidayRequest'
+      responses:
+        '200':
+          description: 创建成功
+
+  /admin/pricing/holidays/batch:
+    post:
+      summary: 批量设置节假日
+      tags: [Admin Pricing]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                holidays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CreateHolidayRequest'
+              required: [holidays]
+      responses:
+        '200':
+          description: 批量创建成功
+
+  # ==================== 管理端 - 仪表盘 ====================
+  /admin/dashboard/overview:
+    get:
+      summary: 仪表盘概览
+      tags: [Admin Dashboard]
+      responses:
+        '200':
+          description: 仪表盘数据
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DashboardOverview'
+
+  # ==================== 管理端 - 小程序简化 ====================
+  /admin/mini/orders:
+    get:
+      summary: 订单列表（小程序管理端简化版）
+      tags: [Admin Mini]
+      responses:
+        '200':
+          description: 简化订单列表
+
+  # ==================== 用户协议 ====================
+  /agreement:
+    get:
+      summary: 获取当前协议
+      tags: [Agreement]
+      security: []
+      responses:
+        '200':
+          description: 协议内容
+
+  /admin/agreement:
+    put:
+      summary: 更新协议（管理端）
+      tags: [Agreement]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgreementRequest'
+      responses:
+        '200':
+          description: 更新成功
+
+# ==================== 组件定义 ====================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    min_price:
+      name: min_price
+      in: query
+      required: false
+      schema:
+        type: number
+        format: float
+      description: 最低日租金
+    max_price:
+      name: max_price
+      in: query
+      required: false
+      schema:
+        type: number
+        format: float
+      description: 最高日租金
+    page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+      description: 页码
+    page_size:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+      description: 每页数量
+
+  schemas:
+    # ===== 通用响应 =====
+    ApiResponse:
+      type: object
+      required: [code, data, message]
+      properties:
+        code:
+          type: integer
+          description: 错误码，0 表示成功
+        data:
+          type: object
+          nullable: true
+          description: 响应数据
+        message:
+          type: string
+          description: 响应消息
+
+    # ===== 认证相关 =====
+    WxLoginRequest:
+      type: object
+      required: [login_code, phone_code]
+      properties:
+        login_code:
+          type: string
+          description: wx.login() 获取的 code
+        phone_code:
+          type: string
+          description: getUserPhoneNumber 获取的 code
+
+    AdminLoginRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          description: 管理端登录密码
+
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        phone:
+          type: string
+          description: 脱敏手机号
+        nickname:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        must_change_pwd:
+          type: boolean
+          description: 首次登录需修改密码
+
+    LoginResult:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Token
+        user:
+          $ref: '#/components/schemas/UserDTO'
+        is_new_user:
+          type: boolean
+
+    # ===== 车辆相关 =====
+    VehicleListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        brand:
+          type: string
+        seats:
+          type: integer
+        transmission:
+          type: string
+          enum: [auto, manual]
+        cover_image:
+          type: string
+          description: 封面图，取自 images[0]
+        weekday_price:
+          type: string
+          format: decimal
+          description: 工作日日租金（string 类型）
+        weekend_price:
+          type: string
+          format: decimal
+          description: 周末日租金（string 类型）
+
+    VehicleDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        brand:
+          type: string
+        seats:
+          type: integer
+        transmission:
+          type: string
+          enum: [auto, manual]
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        weekday_price:
+          type: string
+          format: decimal
+        weekend_price:
+          type: string
+          format: decimal
+        holiday_price:
+          type: string
+          format: decimal
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
+    VehicleListResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        data:
+          type: object
+          properties:
+            total:
+              type: integer
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/VehicleListItem'
+
+    # ===== 订单相关 =====
+    CreateOrderRequest:
+      type: object
+      required: [vehicle_id, start_date, end_date]
+      properties:
+        vehicle_id:
+          type: integer
+          format: int64
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    PriceBreakdownItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [weekday, weekend, holiday]
+        price:
+          type: string
+          format: decimal
+
+    CreateOrderResult:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          format: int64
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        days:
+          type: integer
+        total_price:
+          type: string
+          format: decimal
+
+    OrderListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        vehicle_name:
+          type: string
+        vehicle_image:
+          type: string
+          description: 取自车辆 images[0]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        total_price:
+          type: string
+          format: decimal
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        created_at:
+          type: string
+          format: date-time
+
+    OrderDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        vehicle:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        days:
+          type: integer
+        total_price:
+          type: string
+          format: decimal
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatus'
+        price_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceBreakdownItem'
+        created_at:
+          type: string
+          format: date-time
+
+    OrderListResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        data:
+          type: object
+          properties:
+            total:
+              type: integer
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderListItem'
+
+    RejectOrderRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: 拒绝原因（可选）
+
+    # ===== 订阅消息 =====
+    SubscriptionRecordRequest:
+      type: object
+      required: [template_id]
+      properties:
+        template_id:
+          type: string
+          description: 微信订阅消息模板 ID
+
+    # ===== 车辆管理（管理端） =====
+    CreateVehicleRequest:
+      type: object
+      required: [name, brand, seats, transmission, weekday_price, weekend_price]
+      properties:
+        name:
+          type: string
+        brand:
+          type: string
+        seats:
+          type: integer
+        transmission:
+          type: string
+          enum: [auto, manual]
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        weekday_price:
+          type: string
+          format: decimal
+        weekend_price:
+          type: string
+          format: decimal
+        holiday_price:
+          type: string
+          format: decimal
+          nullable: true
+          description: 不填时默认使用 weekend_price
+
+    # ===== 价格设置 =====
+    CreateHolidayRequest:
+      type: object
+      required: [name, start_date, end_date, year]
+      properties:
+        name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        price_multiplier:
+          type: string
+          format: decimal
+          default: "1.5"
+        fixed_price:
+          type: string
+          format: decimal
+          nullable: true
+          description: 固定价格，优先级高于 multiplier
+        year:
+          type: integer
+
+    # ===== 仪表盘 =====
+    DashboardOverview:
+      type: object
+      properties:
+        today_orders:
+          type: integer
+          description: 今日订单数
+        today_revenue:
+          type: string
+          format: decimal
+          description: 今日收入
+        month_orders:
+          type: integer
+          description: 本月订单数
+        month_revenue:
+          type: string
+          format: decimal
+          description: 本月收入
+        active_orders:
+          type: integer
+          description: 当前进行中订单数
+        available_vehicles:
+          type: integer
+          description: 当前可租车辆数
+
+    # ===== 用户协议 =====
+    UpdateAgreementRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          description: 协议内容
+
+    # ===== 枚举 =====
+    OrderStatus:
+      type: string
+      enum:
+        - pending
+        - confirmed
+        - in_progress
+        - completed
+        - cancelled
+        - rejected
+      description: |
+        pending: 待确认
+        confirmed: 已确认
+        in_progress: 进行中
+        completed: 已完成
+        cancelled: 已取消
+        rejected: 已拒绝
+
+    PaymentStatus:
+      type: string
+      enum:
+        - unpaid
+        - paid
+        - refunded
+      description: |
+        unpaid: 未支付
+        paid: 已支付
+        refunded: 已退款
