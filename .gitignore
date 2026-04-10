@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Lock files
+*.lock
+
+# Environment
+.env
+
+# Node
+node_modules/
+dist/
+
+# Java
+target/
+*.class
