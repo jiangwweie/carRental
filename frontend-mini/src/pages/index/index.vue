@@ -148,15 +148,15 @@ async function loadVehicles(isRefresh = false, isLoadMore = false) {
       noMore.value = true
     } else {
       const res = await getVehicleList({
-        pickupDate: pickupDate.value,
-        returnDate: returnDate.value
+        page: isLoadMore ? Math.ceil(vehicles.value.length / 10) + 1 : 1,
+        page_size: 10
       })
       if (isLoadMore) {
         vehicles.value = [...vehicles.value, ...(res.items || [])]
       } else {
         vehicles.value = res.items || []
       }
-      noMore.value = !res.hasMore
+      noMore.value = (res.items || []).length < 10
     }
   } catch (err) {
     console.error('加载车辆列表失败，使用Mock数据', err)

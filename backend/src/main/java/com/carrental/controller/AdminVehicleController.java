@@ -33,6 +33,13 @@ public class AdminVehicleController {
         List<Vehicle> allVehicles = vehicleRepository.findAllVehicles(page, pageSize);
         long total = vehicleRepository.countAllVehicles();
 
+        if (status != null && !status.isEmpty()) {
+            allVehicles = allVehicles.stream()
+                    .filter(v -> status.equals(v.getStatus()))
+                    .collect(Collectors.toList());
+            total = allVehicles.size();
+        }
+
         Map<String, Object> result = new HashMap<>();
         result.put("total", total);
         result.put("items", allVehicles);

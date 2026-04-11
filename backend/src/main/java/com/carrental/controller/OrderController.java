@@ -101,6 +101,9 @@ public class OrderController {
         result.setEndDate(order.getEndDate());
         result.setDays(order.getDays());
         result.setTotalPrice(order.getTotalPrice());
+        result.setVehicleName(vehicle.getName());
+        result.setPriceBreakdown(priceBreakdown);
+        result.setStatus(order.getStatus().name());
 
         return ApiResponse.success(result);
     }
@@ -291,6 +294,9 @@ public class OrderController {
         private LocalDate endDate;
         private Integer days;
         private java.math.BigDecimal totalPrice;
+        private String vehicleName;
+        private List<PriceBreakdown> priceBreakdown;
+        private String status;
     }
 
     @Data

@@ -21,7 +21,7 @@ public class SubscriptionController {
      * 记录订阅授权
      */
     @PostMapping("/record")
-    public ApiResponse<Void> record(@RequestBody RecordRequest request, HttpServletRequest httpRequest) {
+    public ApiResponse<RecordResponse> record(@RequestBody RecordRequest request, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
 
         // 检查是否已存在
@@ -38,7 +38,16 @@ public class SubscriptionController {
             messageSubscriptionMapper.insert(subscription);
         }
 
-        return ApiResponse.success(null);
+        return ApiResponse.success(new RecordResponse("accepted"));
+    }
+
+    @Data
+    public static class RecordResponse {
+        private String status;
+
+        public RecordResponse(String status) {
+            this.status = status;
+        }
     }
 
     @Data

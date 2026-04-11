@@ -70,6 +70,11 @@ public class DashboardController {
         activeWrapper.eq(OrderDO::getStatus, "in_progress");
         long activeOrders = orderMapper.selectCount(activeWrapper);
 
+        // 待确认订单（pending_orders）
+        LambdaQueryWrapper<OrderDO> pendingWrapper = new LambdaQueryWrapper<>();
+        pendingWrapper.eq(OrderDO::getStatus, "pending");
+        long pendingOrders = orderMapper.selectCount(pendingWrapper);
+
         // 可租车辆
         long availableVehicles = vehicleRepository.countActiveVehicles();
 
@@ -79,6 +84,7 @@ public class DashboardController {
         result.put("month_orders", monthOrders);
         result.put("month_revenue", monthRevenue);
         result.put("active_orders", activeOrders);
+        result.put("pending_orders", pendingOrders);
         result.put("available_vehicles", availableVehicles);
 
         return ApiResponse.success(result);

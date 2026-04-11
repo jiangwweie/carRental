@@ -22,22 +22,21 @@
     <view v-else class="order-list">
       <view v-for="order in filteredOrders" :key="order.id" class="order-card" @click="goDetail(order.id)">
         <view class="order-header">
-          <text class="order-no">订单号: {{ order.orderNo }}</text>
-          <text class="order-status" :class="'status-' + order.status">{{ order.statusText }}</text>
+          <text class="order-no">订单号: {{ order.id }}</text>
+          <text class="order-status" :class="'status-' + order.status">{{ order.status_label }}</text>
         </view>
         <view class="order-body">
           <view class="vehicle-info">
-            <text class="vehicle-brand">{{ order.vehicleBrand }}</text>
-            <text class="vehicle-name">{{ order.vehicleName }}</text>
+            <text class="vehicle-name">{{ order.vehicle_name }}</text>
           </view>
-          <text class="order-amount">¥{{ order.totalAmount }}</text>
+          <text class="order-amount">¥{{ order.total_price }}</text>
         </view>
         <view class="order-dates">
-          <text class="date-text">{{ order.startDate }} ~ {{ order.endDate }}</text>
+          <text class="date-text">{{ order.start_date }} ~ {{ order.end_date }}</text>
           <text class="days-text">共 {{ order.days }} 天</text>
         </view>
         <view class="order-footer" v-if="order.status === 'pending'">
-          <view class="order-created">{{ order.createdAt }} 创建</view>
+          <view class="order-created">{{ order.created_at }} 创建</view>
           <view class="cancel-btn" @click.stop="handleCancel(order.id)">取消</view>
         </view>
       </view>
@@ -49,6 +48,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useAuthGuard } from '../../utils/auth-guard.js'
+import { getOrders, cancelOrder } from '../../api/order.js'
 
 onShow(() => {
   useAuthGuard()
@@ -62,52 +62,19 @@ const tabList = [
   { label: '全部', value: 'all' },
   { label: '待确认', value: 'pending' },
   { label: '已确认', value: 'confirmed' },
-  { label: '进行中', value: 'ongoing' },
+  { label: '进行中', value: 'in_progress' },
   { label: '已完成', value: 'completed' }
 ]
 
-// Mock orders data for development fallback
-const mockOrders = [
-  {
-    id: 'ORD001',
-    orderNo: 'CAR20260411001',
-    vehicleName: '特斯拉 Model 3',
-    vehicleBrand: 'Tesla',
-    startDate: '2026-04-12',
-    endDate: '2026-04-15',
-    days: 3,
-    totalAmount: 1197,
-    status: 'pending',
-    statusText: '待确认',
-    createdAt: '2026-04-11 15:30'
-  },
-  {
-    id: 'ORD002',
-    orderNo: 'CAR20260410001',
-    vehicleName: '本田雅阁',
-    vehicleBrand: 'Honda',
-    startDate: '2026-04-08',
-    endDate: '2026-04-10',
-    days: 2,
-    totalAmount: 698,
-    status: 'confirmed',
-    statusText: '已确认',
-    createdAt: '2026-04-10 10:00'
-  },
-  {
-    id: 'ORD003',
-    orderNo: 'CAR20260405001',
-    vehicleName: '大众途观 L',
-    vehicleBrand: 'VW',
-    startDate: '2026-04-01',
-    endDate: '2026-04-03',
-    days: 2,
-    totalAmount: 598,
-    status: 'completed',
-    statusText: '已完成',
-    createdAt: '2026-04-05 09:00'
-  }
-]
+// Status enum to Chinese label mapping
+const statusLabelMap = {
+  pending: '待确认',
+  confirmed: '已确认',
+  in_progress: '进行中',
+  completed: '已完成',
+  cancelled: '已取消',
+  rejected: '已拒绝'
+}
 
 // Computed filtered orders based on active tab
 const filteredOrders = computed(() => {
@@ -123,16 +90,14 @@ function switchTab(value) {
 
 onMounted(async () => {
   try {
-    // Try API first, fall back to mock data
-    await new Promise(resolve => setTimeout(resolve, 500))
-    orders.value = []
-    if (orders.value.length === 0) {
-      // API returned empty or failed, load mock data
-      orders.value = mockOrders
-    }
+    const res = await getOrders()
+    orders.value = (res.items || []).map(item => ({
+      ...item,
+      status_label: item.status_label || statusLabelMap[item.status] || item.status
+    }))
   } catch (err) {
-    console.error('加载订单列表失败，使用 Mock 数据', err)
-    orders.value = mockOrders
+    console.error('加载订单列表失败', err)
+    orders.value = []
   } finally {
     loading.value = false
   }
@@ -142,17 +107,23 @@ function goDetail(id) {
   uni.navigateTo({ url: `/pages/order-detail/order-detail?id=${id}` })
 }
 
-function handleCancel(id) {
+async function handleCancel(id) {
   uni.showModal({
     title: '确认取消',
     content: '确定要取消此订单吗？',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
-        const order = orders.value.find(o => o.id === id)
-        if (order) {
-          order.status = 'cancelled'
-          order.statusText = '已取消'
+        try {
+          await cancelOrder(id)
+          const order = orders.value.find(o => o.id === id)
+          if (order) {
+            order.status = 'cancelled'
+            order.status_label = '已取消'
+          }
           uni.showToast({ title: '订单已取消', icon: 'success' })
+        } catch (err) {
+          console.error('取消订单失败', err)
+          uni.showToast({ title: '取消失败，请重试', icon: 'none' })
         }
       }
     }

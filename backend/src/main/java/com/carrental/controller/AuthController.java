@@ -45,6 +45,19 @@ public class AuthController {
         return ApiResponse.success(result);
     }
 
+    /**
+     * 刷新 Token（MVP：校验非空，返回 mock token）
+     */
+    @PostMapping("/refresh")
+    public ApiResponse<AuthService.LoginResult> refresh(
+            @RequestParam("refresh_token") String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ApiResponse.error(400, "refresh_token is required");
+        }
+        AuthService.LoginResult result = authService.mockLogin("user");
+        return ApiResponse.success(result);
+    }
+
     @lombok.Data
     public static class MockLoginRequest {
         private String role;  // "user" 或 "admin"

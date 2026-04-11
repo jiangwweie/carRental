@@ -46,15 +46,15 @@
         <text class="section-title">订单信息</text>
         <view class="info-row">
           <text class="label">订单编号</text>
-          <text class="value">{{ order.orderNo }}</text>
+          <text class="value">{{ order.id }}</text>
         </view>
         <view class="info-row">
           <text class="label">订单状态</text>
-          <text class="value status-text" :class="'status-' + order.status">{{ order.statusText }}</text>
+          <text class="value status-text" :class="'status-' + order.status">{{ order.status_label }}</text>
         </view>
         <view class="info-row">
           <text class="label">创建时间</text>
-          <text class="value">{{ order.createdAt }}</text>
+          <text class="value">{{ order.created_at }}</text>
         </view>
       </view>
 
@@ -62,20 +62,15 @@
       <view class="vehicle-card">
         <text class="section-title">车辆信息</text>
         <view class="vehicle-header">
-          <text class="vehicle-name">{{ order.vehicleName }}</text>
-          <text class="vehicle-brand">{{ order.vehicleBrand }}</text>
-        </view>
-        <view class="info-row">
-          <text class="label">日租金</text>
-          <text class="value price">¥{{ order.dailyRate }}<text class="unit">/天</text></text>
+          <text class="vehicle-name">{{ order.vehicle?.name || '未知车辆' }}</text>
         </view>
         <view class="info-row">
           <text class="label">取车日期</text>
-          <text class="value">{{ order.startDate }}</text>
+          <text class="value">{{ order.start_date }}</text>
         </view>
         <view class="info-row">
           <text class="label">还车日期</text>
-          <text class="value">{{ order.endDate }}</text>
+          <text class="value">{{ order.end_date }}</text>
         </view>
         <view class="info-row">
           <text class="label">租赁天数</text>
@@ -88,20 +83,12 @@
         <text class="section-title">价格明细</text>
         <view class="price-detail-row">
           <text class="detail-label">车辆租金</text>
-          <text class="detail-value">{{ order.priceBreakdown.days }}天 × ¥{{ order.priceBreakdown.dailyRate }}</text>
-        </view>
-        <view class="price-detail-row">
-          <text class="detail-label">合计金额</text>
-          <text class="detail-value">¥{{ order.priceBreakdown.subtotal }}</text>
-        </view>
-        <view class="price-detail-row" v-if="order.priceBreakdown.discount > 0">
-          <text class="detail-label discount-text">优惠折扣</text>
-          <text class="detail-value discount-text">-¥{{ order.priceBreakdown.discount }}</text>
+          <text class="detail-value">{{ order.days }}天 × ¥{{ Math.round(order.total_price / order.days) }}</text>
         </view>
         <view class="divider"></view>
         <view class="final-row">
           <text class="final-label">应付金额</text>
-          <text class="final-value">¥{{ order.priceBreakdown.total }}</text>
+          <text class="final-value">¥{{ order.total_price }}</text>
         </view>
       </view>
 
@@ -109,7 +96,7 @@
       <view class="address-card">
         <text class="section-title">取车地址</text>
         <view class="address-row">
-          <text class="address-text">{{ order.pickupAddress }}</text>
+          <text class="address-text">{{ order.pickup_address?.address || '暂无地址' }}</text>
           <view class="copy-btn" @click="copyAddress">
             <text class="copy-icon">📋</text>
             <text class="copy-text">复制</text>
@@ -166,27 +153,15 @@ const currentStepIndex = ref(0)
 // Mock 数据
 const mockOrder = {
   id: 'ORD20260412001',
-  orderNo: 'CAR20260412001',
-  vehicleName: '特斯拉 Model 3',
-  vehicleBrand: 'Tesla',
-  startDate: '2026-04-12',
-  endDate: '2026-04-15',
+  vehicle: { name: '特斯拉 Model 3' },
+  start_date: '2026-04-12',
+  end_date: '2026-04-15',
   days: 3,
-  dailyRate: 399,
-  totalAmount: 1197,
-  discount: 0,
-  finalAmount: 1197,
+  total_price: 1197,
   status: 'pending',
-  statusText: '待确认',
-  createdAt: '2026-04-11 15:30:00',
-  pickupAddress: 'XX市XX区XX路XX号',
-  priceBreakdown: {
-    dailyRate: 399,
-    days: 3,
-    subtotal: 1197,
-    discount: 0,
-    total: 1197
-  }
+  status_label: '待确认',
+  created_at: '2026-04-11 15:30:00',
+  pickup_address: { address: 'XX市XX区XX路XX号', hours: '09:00-18:00', note: '' }
 }
 
 onLoad((options) => {
@@ -214,14 +189,6 @@ async function fetchDetail() {
     const lastOrderStr = uni.getStorageSync('lastOrder')
     if (lastOrderStr && orderId.value && orderId.value.startsWith('mock_order_')) {
       const parsed = JSON.parse(lastOrderStr)
-      // 补充 priceBreakdown 字段（模板中需要）
-      parsed.priceBreakdown = parsed.priceBreakdown || {
-        dailyRate: parsed.totalAmount / parsed.days,
-        days: parsed.days,
-        subtotal: parsed.totalAmount,
-        discount: parsed.discount,
-        total: parsed.finalAmount
-      }
       order.value = parsed
     } else {
       order.value = mockOrder
@@ -245,8 +212,9 @@ function updateStepIndex() {
 // 复制取车地址
 function copyAddress() {
   if (!order.value) return
+  const addr = order.value.pickup_address?.address || order.value.pickupAddress
   uni.setClipboardData({
-    data: order.value.pickupAddress,
+    data: addr,
     success: () => {
       uni.showToast({ title: '地址已复制', icon: 'success' })
     }
@@ -266,7 +234,7 @@ async function onCancelOrder() {
         uni.showToast({ title: '订单已取消', icon: 'success' })
         // 刷新订单状态
         order.value.status = 'cancelled'
-        order.value.statusText = '已取消'
+        order.value.status_label = '已取消'
         currentStepIndex.value = -1
       } catch (err) {
         console.error('取消订单失败', err)

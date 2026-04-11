@@ -38,6 +38,6 @@ export function refreshToken(refreshToken) {
   return request({
     url: '/api/v1/auth/refresh',
     method: 'POST',
-    data: { refreshToken }
+    params: { refresh_token: refreshToken }
   })
 }

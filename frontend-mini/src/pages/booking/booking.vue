@@ -129,16 +129,19 @@ async function fetchPrice() {
         start_date: startDate.value,
         end_date: endDate.value
       })
+      const daysCount = res.days || days.value || 1
+      const totalPrice = res.total_price || 0
+      const dailyRate = daysCount > 0 ? Math.round(totalPrice / daysCount) : 0
       priceData.value = {
         vehicleId: res.vehicle_id || vehicleId.value,
         vehicleName: res.vehicle_name || '未知车辆',
-        days: res.days || days.value,
+        days: daysCount,
         startDate: res.start_date || startDate.value,
         endDate: res.end_date || endDate.value,
-        dailyRate: res.daily_rate || 0,
-        totalAmount: res.total_amount || 0,
-        discount: res.discount || 0,
-        finalAmount: res.final_amount || 0
+        dailyRate,
+        totalAmount: totalPrice,
+        discount: 0,
+        finalAmount: totalPrice
       }
     } else {
       throw new Error('no vehicleId')
@@ -185,7 +188,7 @@ async function onSubmit() {
     uni.showToast({ title: '订单提交成功', icon: 'success' })
 
     // 跳转到订单详情页
-    const orderId = res?.id || res?.orderId || 1
+    const orderId = res?.order_id || 1
     setTimeout(() => {
       uni.navigateTo({ url: `/pages/order-detail/order-detail?id=${orderId}` })
     }, 800)
