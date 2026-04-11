@@ -21,26 +21,28 @@ export const useUserStore = defineStore('user', () => {
 
   /**
    * Mock login for development/testing.
-   * Calls POST /api/v1/auth/mock-login with phone and code.
+   * Pure local simulation, no network requests.
    */
   async function mockLogin(data = {}) {
-    const res = await request({
-      url: '/api/v1/auth/mock-login',
-      method: 'POST',
-      data: {
-        phone: data.phone || '13800138000',
-        code: data.code || '123456'
-      }
-    })
+    const phone = data.phone || '13800138000'
+    const code = data.code || '123456'
 
-    token.value = res.token
-    userInfo.value = res.userInfo
+    const fakeToken = 'mock_token_' + Date.now()
+    const fakeUserInfo = {
+      nickName: '测试用户',
+      phone: phone,
+      avatarUrl: '',
+      role: 'user'
+    }
+
+    token.value = fakeToken
+    userInfo.value = fakeUserInfo
     isLoggedIn.value = true
 
-    uni.setStorageSync('token', res.token)
-    uni.setStorageSync('userInfo', res.userInfo)
+    uni.setStorageSync('token', fakeToken)
+    uni.setStorageSync('userInfo', JSON.stringify(fakeUserInfo))
 
-    return res
+    return { token: fakeToken, userInfo: fakeUserInfo }
   }
 
   async function login(phoneCode) {

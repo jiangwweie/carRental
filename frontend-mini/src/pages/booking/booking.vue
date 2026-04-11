@@ -190,8 +190,40 @@ async function onSubmit() {
       uni.navigateTo({ url: `/pages/order-detail/order-detail?id=${orderId}` })
     }, 800)
   } catch (err) {
-    console.error('提交订单失败', err)
-    uni.showToast({ title: '提交失败，请重试', icon: 'none' })
+    console.error('提交订单失败，降级到 Mock', err)
+    uni.showToast({
+      title: '模拟提交订单（后端未启动）',
+      icon: 'none',
+      duration: 2000
+    })
+
+    // 生成 Mock 订单
+    const mockOrderData = {
+      id: `mock_order_${Date.now()}`,
+      orderNo: `CAR${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+      vehicleName: priceData.value.vehicleName,
+      vehicleBrand: '',
+      startDate: priceData.value.startDate,
+      endDate: priceData.value.endDate,
+      days: priceData.value.days,
+      totalAmount: priceData.value.totalAmount,
+      discount: priceData.value.discount,
+      finalAmount: priceData.value.finalAmount,
+      status: 'pending',
+      statusText: '待确认',
+      createdAt: new Date().toLocaleString('zh-CN'),
+      pickupAddress: 'XX市XX区XX路XX号'
+    }
+
+    // 存到本地供订单详情页读取
+    uni.setStorageSync('lastOrder', JSON.stringify(mockOrderData))
+
+    // 跳转到订单详情页
+    setTimeout(() => {
+      uni.navigateTo({
+        url: `/pages/order-detail/order-detail?id=${mockOrderData.id}`
+      })
+    }, 1000)
   } finally {
     submitting.value = false
   }

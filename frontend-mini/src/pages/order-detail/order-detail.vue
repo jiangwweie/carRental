@@ -209,8 +209,23 @@ async function fetchDetail() {
       throw new Error('no orderId')
     }
   } catch (err) {
-    console.warn('API 获取订单详情失败，使用 Mock 数据', err)
-    order.value = mockOrder
+    console.warn('API 获取订单详情失败，尝试本地数据', err)
+    // 优先读取 booking 页存入的最新订单
+    const lastOrderStr = uni.getStorageSync('lastOrder')
+    if (lastOrderStr && orderId.value && orderId.value.startsWith('mock_order_')) {
+      const parsed = JSON.parse(lastOrderStr)
+      // 补充 priceBreakdown 字段（模板中需要）
+      parsed.priceBreakdown = parsed.priceBreakdown || {
+        dailyRate: parsed.totalAmount / parsed.days,
+        days: parsed.days,
+        subtotal: parsed.totalAmount,
+        discount: parsed.discount,
+        total: parsed.finalAmount
+      }
+      order.value = parsed
+    } else {
+      order.value = mockOrder
+    }
     updateStepIndex()
   } finally {
     loading.value = false
