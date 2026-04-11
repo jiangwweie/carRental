@@ -125,7 +125,7 @@
 | P0-3 | 完善车辆详情 API（images 数组） | US-03, US-17 | 后端 | 0.5h | ✅ 完成 |
 | P0-4 | 实现 Pricing Estimate API | US-18 | 后端 | 1h | ✅ 完成 |
 | P0-5 | 完善订单创建 API（后端算价 + 冲突检测） | US-04 | 后端 | 1h | ✅ 完成 |
-| P0-6 | 完善订单列表/详情 API（两查询组合） | US-05, US-19 | 后端 | 1h | ⏳ |
+| P0-6 | 完善订单列表/详情 API（两查询组合） | US-05, US-19 | 后端 | 1h | ✅ 完成 |
 | P0-7 | 登录简化方案（模拟登录 bypass 微信） | US-01, US-21 | 后端 | 1h | ✅ 完成 |
 | P0-8 | TabBar 补全（首页/订单/我的） | - | 前端 | 0.5h | ⏳ |
 | P0-9 | 首页（取车信息 + 车辆卡片 + 空状态） | US-02, US-15, US-25 | 前端 | 2h | ⏳ |
@@ -137,7 +137,7 @@
 | P0-15 | 用户协议页 | US-06 | 前端 | 0.5h | ⏳ |
 | P0-16 | 登录态拦截（无 token 跳转 + 401 处理） | US-21 | 前端 | 0.5h | ⏳ |
 
-**Sprint 1 总计**: ~15h | **已完成**: ~4.5h | **剩余**: ~10.5h
+**Sprint 1 总计**: ~15h | **已完成**: ~5.5h | **剩余**: ~9.5h
 
 ### 已知问题（待处理）
 
@@ -146,7 +146,6 @@
 | 1 | Admin 登录端点契约不一致 | P1 | API 要求 phone+password，当前只有 password |
 | 2 | Dashboard 缺少 monthRevenue | P1 | 概览接口数据不完整 |
 | 3 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
-| 4 | P0-6 订单列表/详情缺车辆信息组合 | P0 | 前端订单页的前置依赖，待开发 |
 | 5 | 前端全部 8 个页面缺失 | P0 | .vue 文件未创建 |
 
 ### 已修复（本轮）
@@ -154,6 +153,7 @@
 | # | 修复 | 说明 |
 |---|------|------|
 | - | api-spec.yaml 8 项契约修复 | mock-login + pricing estimate + agreed + vehicle_name + price_breakdown + status_label/steps + base64 images + transmission 枚举对齐 |
+| - | P0-6 订单列表/详情 API 完成 | 两查询组合车辆信息 + OrderListItemDTO + OrderDetailVO + statusSteps + pickupAddress |
 
 ---
 
