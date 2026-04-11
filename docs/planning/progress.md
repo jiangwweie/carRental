@@ -15,6 +15,66 @@
 
 ## Sprint 1: Demo（当前）
 
+### 2026-04-11 收工 - P1/P2 审查问题修复 + 代码推送
+
+**会话阶段**: UI/UX 问题修复 + 代码审查闭环
+**参与者**: 用户（确认优先级）+ Claude Code（PM 调度，3 Agent 并行）
+
+#### 完成工作
+
+- **P1 问题修复（3 个）**
+  - `login.vue`: 按钮 `:disabled` 增加 `!agreed` 条件，未勾选协议时真正不可点击
+  - `me.vue`: 用户卡片渐变色从紫色 `#667eea` 改为绿色 `#07c160` 主题色
+  - 订单列表页: 保持 Mock 数据策略，loading 和重试体验已优化
+
+- **P2 问题修复（3 个）**
+  - `vehicle-detail.vue`: 删除未使用的 `currentImage` 变量，swiper 添加 `@change` 事件
+  - `vehicle-detail.vue`: 日期选择器从 `showModal` 改为原生 `<picker mode="date">`
+  - `index.vue`: `returnDate` 默认改为 `pickupDate + 1 天`（默认租期 1 天）
+
+#### Git 提交
+- `df23484` fix(frontend): 修复代码审查发现的 P1/P2 问题
+- 已推送到远程仓库 `origin/main`
+
+---
+
+### 2026-04-11 收工 - Sprint 1 前端 7 个页面全部开发完成
+
+**会话阶段**: 前端开发（PM 调度，多 Agent 并行）
+**参与者**: 用户（需求确认）+ Claude Code（PM + 5 Agent 并行）
+
+#### 完成工作
+
+- **基础设施增强**
+  - `request.js`: 401 自动拦截 + 全局 loading + 网络错误友好提示
+  - `store/user.js`: 支持 mock-login（开发阶段 bypass 微信授权）
+  - `auth-guard.js`: 新建登录态拦截工具，页面级 onShow 检查
+
+- **API 模块（4 个新增）**
+  - `api/auth.js`: mock-login / wx-login / refresh-token
+  - `api/order.js`: 创建/列表/详情/取消订单
+  - `api/pricing.js`: 价格估算
+  - `api/agreement.js`: 获取用户协议
+
+- **页面开发（7 个页面）**
+  - `pages/index/index.vue`: 增强首页（取车信息卡片、空状态、下拉刷新、Mock 数据）
+  - `pages/login/login.vue`: 修复登录页（mock-login 输入 + 协议校验 + 微信登录保留）
+  - `pages/vehicle-detail/vehicle-detail.vue`: 车辆详情页（图片轮播、租期选择、价格预览）
+  - `pages/booking/booking.vue`: 预订下单页（价格明细、协议勾选、提交订单）
+  - `pages/orders/orders.vue`: 订单列表页（状态 Tab、订单卡片、取消操作）
+  - `pages/order-detail/order-detail.vue`: 订单详情页（状态进度条、信息区块、操作按钮）
+  - `pages/me/me.vue`: 我的页面（用户信息、菜单导航、退出登录）
+  - `pages/agreement/agreement.vue`: 用户协议页（6 章节完整协议）
+
+- **代码审查**
+  - 修复 P0: store/user.js mockLogin 响应解包错误
+  - 修复 P0: order-detail 页面缺失登录拦截
+
+#### Git 提交
+- `b9d5b2a` feat(frontend): Sprint 1 前端 7 个页面全部开发完成 + API 模块 + 登录拦截
+
+---
+
 ### 2026-04-11 开工 - QA 审查 + 5 个 P0 Bug 修复 + API 补全
 
 **会话阶段**: 架构审查 + 后端 Bug 修复 + API 补全
@@ -127,17 +187,17 @@
 | P0-5 | 完善订单创建 API（后端算价 + 冲突检测） | US-04 | 后端 | 1h | ✅ 完成 |
 | P0-6 | 完善订单列表/详情 API（两查询组合） | US-05, US-19 | 后端 | 1h | ✅ 完成 |
 | P0-7 | 登录简化方案（模拟登录 bypass 微信） | US-01, US-21 | 后端 | 1h | ✅ 完成 |
-| P0-8 | TabBar 补全（首页/订单/我的） | - | 前端 | 0.5h | ⏳ |
-| P0-9 | 首页（取车信息 + 车辆卡片 + 空状态） | US-02, US-15, US-25 | 前端 | 2h | ⏳ |
-| P0-10 | 车辆详情页（图片轮播 + 租期选择） | US-03, US-17, US-18 | 前端 | 2h | ⏳ |
-| P0-11 | 预订下单页（价格明细 + 协议 + 提交） | US-04, US-18, US-22 | 前端 | 2h | ⏳ |
-| P0-12 | 订单列表页（状态 Tab + 卡片 + 取消） | US-05, US-25 | 前端 | 1.5h | ⏳ |
-| P0-13 | 订单详情页（状态进度条 + 信息区块） | US-05, US-19 | 前端 | 1.5h | ⏳ |
-| P0-14 | 「我的」页面（用户信息 + 入口 + 退出） | US-20 | 前端 | 0.5h | ⏳ |
-| P0-15 | 用户协议页 | US-06 | 前端 | 0.5h | ⏳ |
-| P0-16 | 登录态拦截（无 token 跳转 + 401 处理） | US-21 | 前端 | 0.5h | ⏳ |
+| P0-8 | TabBar 补全（首页/订单/我的） | - | 前端 | 0.5h | ✅ 完成 |
+| P0-9 | 首页（取车信息 + 车辆卡片 + 空状态） | US-02, US-15, US-25 | 前端 | 2h | ✅ 完成 |
+| P0-10 | 车辆详情页（图片轮播 + 租期选择） | US-03, US-17, US-18 | 前端 | 2h | ✅ 完成 |
+| P0-11 | 预订下单页（价格明细 + 协议 + 提交） | US-04, US-18, US-22 | 前端 | 2h | ✅ 完成 |
+| P0-12 | 订单列表页（状态 Tab + 卡片 + 取消） | US-05, US-25 | 前端 | 1.5h | ✅ 完成 |
+| P0-13 | 订单详情页（状态进度条 + 信息区块） | US-05, US-19 | 前端 | 1.5h | ✅ 完成 |
+| P0-14 | 「我的」页面（用户信息 + 入口 + 退出） | US-20 | 前端 | 0.5h | ✅ 完成 |
+| P0-15 | 用户协议页 | US-06 | 前端 | 0.5h | ✅ 完成 |
+| P0-16 | 登录态拦截（无 token 跳转 + 401 处理） | US-21 | 前端 | 0.5h | ✅ 完成 |
 
-**Sprint 1 总计**: ~15h | **已完成**: ~5.5h | **剩余**: ~9.5h
+**Sprint 1 总计**: ~15h | **已完成**: ~15h（前端 100% + 后端 100%） | **剩余**: 0h 🎉
 
 ### 已知问题（待处理）
 
@@ -146,7 +206,7 @@
 | 1 | Admin 登录端点契约不一致 | P1 | API 要求 phone+password，当前只有 password |
 | 2 | Dashboard 缺少 monthRevenue | P1 | 概览接口数据不完整 |
 | 3 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
-| 5 | 前端全部 8 个页面缺失 | P0 | .vue 文件未创建 |
+| 4 | P0-6 订单列表/详情缺车辆信息组合 | P0 | 后端已完成两查询组合，前端已就绪 |
 
 ### 已修复（本轮）
 
