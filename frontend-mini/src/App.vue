@@ -2,6 +2,17 @@
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { useUserStore } from './store/user.js'
 
+/**
+ * Public pages that do not require login.
+ * Users can browse these pages without authentication.
+ */
+const PUBLIC_PAGES = [
+  '/pages/index/index',
+  '/pages/vehicle-detail/vehicle-detail',
+  '/pages/login/login',
+  '/pages/agreement/agreement',
+]
+
 onLaunch(() => {
   console.log('App Launch')
 
@@ -9,7 +20,7 @@ onLaunch(() => {
   const userStore = useUserStore()
   const isLogin = userStore.checkLoginStatus()
   if (!isLogin) {
-    console.log('App Launch: 用户未登录，首页和车辆详情页为公开页面，暂不强制跳转')
+    console.log('App Launch: 用户未登录，公开页面可正常访问')
   } else {
     console.log('App Launch: 用户已登录')
   }
@@ -17,6 +28,21 @@ onLaunch(() => {
 
 onShow(() => {
   console.log('App Show')
+
+  // 全局登录守卫：每次切回前台时检查登录态
+  const userStore = useUserStore()
+  const isLogin = userStore.checkLoginStatus()
+  if (!isLogin) {
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const route = currentPage?.route || ''
+
+    if (!PUBLIC_PAGES.includes(`/${route}`)) {
+      uni.reLaunch({
+        url: '/pages/login/login'
+      })
+    }
+  }
 })
 
 onHide(() => {

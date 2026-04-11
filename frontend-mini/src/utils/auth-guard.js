@@ -19,7 +19,15 @@ export function useAuthGuard(redirectUrl = '/pages/login/login') {
   const isLogin = userStore.checkLoginStatus()
 
   if (!isLogin) {
-    uni.redirectTo({ url: redirectUrl })
+    // 获取当前页面路径，作为登录后返回的来源页
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const currentRoute = currentPage?.route || ''
+    const loginUrl = currentRoute
+      ? `${redirectUrl}?redirectTo=${encodeURIComponent('/' + currentRoute)}`
+      : redirectUrl
+
+    uni.redirectTo({ url: loginUrl })
     return false
   }
 

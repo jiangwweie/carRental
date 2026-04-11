@@ -8,7 +8,7 @@
 |------|------|---------|------|
 | **Sprint 1: Demo** | 小程序用户端核心流程跑通（浏览→选车→下单→查看订单） | ~15h | ✅ 已完成 |
 | **Sprint 2: 管理** | PC 管理端 + 小程序管理端（车辆管理 + 订单处理 + 契约修复） | ~16h | ✅ 已完成 |
-| **Sprint 2.5: 核心验证** | 关闭 Mock + 真实 API 全流程 + 个人中心 + 全局登录检查 | ~2.5h | 🔄 待开始 |
+| **Sprint 2.5: 核心验证** | 关闭 Mock + 真实 API 全流程 + 个人中心 + 全局登录检查 | ~2.5h | 🔄 T1, T2 完成 |
 | **Sprint 3: 优化** | 节假日配置 UI + 首页筛选 + 订单筛选 + PC 订单详情 + 微信登录 + 订阅消息 | ~6.5h | 📋 规划中 |
 | **Sprint 4: 支付** | 微信支付 + 退款 + OSS + 完整定价 | ~10.5h | 📋 规划中（需外部条件） |
 
@@ -17,6 +17,49 @@
 - PC 管理端：车辆管理（CRUD + 上下架 + 批量定价）、订单管理（列表+确认+拒绝+完成）、仪表盘、价格设置、协议管理
 - 后端 API 增强：节假日定价管理 + 协议版本递增 + 契约合规修复
 - 契约合规修复（12 文件）：Jackson snake_case + 6 后端修复 + 6 前端修复 + 103/103 测试通过
+
+---
+
+---
+
+### 2026-04-11 Sprint 2.5 T3 - 全局登录态检查
+
+**修改内容**:
+- `frontend-mini/src/App.vue`: `onShow` 添加全局登录守卫，使用公开页面白名单方案
+  - 公开页面：首页、车辆详情、登录页、用户协议
+  - 非公开页面未登录时 `uni.reLaunch` 跳转登录页
+- `frontend-mini/src/pages/login/login.vue`: 登录成功后支持返回来源页
+  - 读取 `redirectTo` 查询参数
+  - Tab 页面（index/orders/me）使用 `uni.switchTab`
+  - 普通页面使用 `uni.redirectTo`
+- `frontend-mini/src/utils/auth-guard.js`: 页面级守卫跳转时传递当前页路径作为 `redirectTo` 参数
+- `npm run build:mp-weixin` 编译通过
+
+---
+
+### 2026-04-11 Sprint 2.5 T2 - 个人中心动态用户信息 + 退出登录
+
+**修改内容**:
+- `frontend-mini/src/pages/me/me.vue`: 从 `useUserStore()` 读取 `userInfo` 和 `isLoggedIn`
+  - 已登录状态：显示用户昵称、脱敏手机号、头像（支持 avatarUrl 或默认图标）
+  - 未登录状态：显示"点击登录"引导，点击跳转登录页
+  - 退出登录：`uni.showModal` 确认 -> `userStore.logout()` -> `uni.switchTab` 跳转首页
+- 手机号脱敏处理（`maskPhone` 函数：138****8000 格式）
+- `npm run build:mp-weixin` 编译通过
+
+---
+
+### 2026-04-11 Sprint 2.5 T1 - 关闭 Mock 数据，对接真实 API
+
+**修改内容**:
+- `frontend-mini/src/pages/index/index.vue`: `useMock` 从 `ref(true)` 改为 `ref(false)`
+- 其余页面（vehicle-detail、booking、order-detail）已是 API-first + try/catch 降级到 Mock 模式，无需修改
+- `npm run build:mp-weixin` 编译通过
+- Mock 数据保留作为 API 失败时的兜底策略
+
+**环境配置说明**:
+- `VITE_API_BASE_URL` 未配置，默认 `http://localhost:8080`
+- `VITE_USE_MOCK_LOGIN` 未配置，使用真实微信登录流程
 
 ---
 
@@ -491,9 +534,9 @@
 
 | # | 任务 | 端 | 预估 | 状态 | 说明 |
 |---|------|-----|------|------|------|
-| T1 | 关闭 Mock 数据，对接真实 API | 小程序 | 1h | 📋 | index.vue useMock=false，验证浏览→选车→预订→订单全流程 |
-| T2 | 个人中心动态用户信息 + 退出登录 | 小程序 | 1h | 📋 | me.vue 读 userStore，加退出登录按钮 |
-| T3 | 全局登录态检查 | 小程序 | 0.5h | 📋 | app.vue onLaunch 检查 token，无 token 跳转登录 |
+| T1 | 关闭 Mock 数据，对接真实 API | 小程序 | 1h | ✅ | index.vue useMock=false，验证浏览→选车→预订→订单全流程 |
+| T2 | 个人中心动态用户信息 + 退出登录 | 小程序 | 1h | ✅ | me.vue 读 userStore，加退出登录按钮 |
+| T3 | 全局登录态检查 | 小程序 | 0.5h | ✅ | App.vue onShow 公开页面白名单守卫 + login.vue 支持返回来源页 + auth-guard 传递 redirectTo |
 
 ## Sprint 3: 小程序管理端 + 体验优化（~6.5h）
 
@@ -534,5 +577,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (契约合规修复完成 + Sprint 2.5 规划)*
+*最后更新: 2026-04-11 (T3 全局登录态检查完成 + Sprint 2.5 推进中)*
 *项目经理: Claude Code PM*

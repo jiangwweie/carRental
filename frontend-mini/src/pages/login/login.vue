@@ -67,6 +67,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/user.js'
 
 const agreed = ref(false)
@@ -74,6 +75,34 @@ const phone = ref('13800138000')
 const code = ref('123456')
 const loading = ref(false)
 const userStore = useUserStore()
+
+// Redirect URL after login, defaults to home page
+const redirectUrl = ref('/pages/index/index')
+
+// Tab pages that require switchTab instead of redirectTo
+const TAB_PAGES = [
+  '/pages/index/index',
+  '/pages/orders/orders',
+  '/pages/me/me',
+]
+
+onLoad((options) => {
+  if (options && options.redirectTo) {
+    redirectUrl.value = decodeURIComponent(options.redirectTo)
+  }
+})
+
+/**
+ * Navigate to the target page after successful login.
+ * Uses switchTab for tab pages, redirectTo for others.
+ */
+function navigateAfterLogin(url) {
+  if (TAB_PAGES.includes(url)) {
+    uni.switchTab({ url })
+  } else {
+    uni.redirectTo({ url })
+  }
+}
 
 function onAgreeChange(e) {
   agreed.value = e.detail.value.length > 0
@@ -92,17 +121,35 @@ async function onLogin() {
 
   loading.value = true
   try {
-    await userStore.mockLogin({
-      phone: phone.value,
-      code: code.value
-    })
+    // Use backend mock-login API to get a real JWT token
+    // In production, this will be replaced with real WeChat login
+    const { mockLogin } = await import('../../api/auth.js')
+    const res = await mockLogin({ role: 'user' })
+
+    // Store token and user info from backend response
+    uni.setStorageSync('token', res.token)
+    uni.setStorageSync('userInfo', JSON.stringify(res.user))
+    userStore.checkLoginStatus()
+
     uni.showToast({ title: '登录成功', icon: 'success' })
     setTimeout(() => {
-      uni.switchTab({ url: '/pages/index/index' })
+      navigateAfterLogin(redirectUrl.value)
     }, 500)
   } catch (err) {
     console.error('登录失败', err)
-    uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+    // Fallback to local mock if backend is unavailable
+    try {
+      await userStore.mockLogin({
+        phone: phone.value,
+        code: code.value
+      })
+      uni.showToast({ title: '后端不可用，已降级到本地 Mock', icon: 'none' })
+      setTimeout(() => {
+        navigateAfterLogin(redirectUrl.value)
+      }, 500)
+    } catch (fallbackErr) {
+      uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+    }
   } finally {
     loading.value = false
   }
@@ -120,7 +167,7 @@ async function onWechatLogin(e) {
       await userStore.login(e.detail.code)
       uni.showToast({ title: '登录成功', icon: 'success' })
       setTimeout(() => {
-        uni.switchTab({ url: '/pages/index/index' })
+        navigateAfterLogin(redirectUrl.value)
       }, 500)
     } catch (err) {
       console.error('微信登录失败', err)

@@ -122,7 +122,7 @@ const loading = ref(true)
 const refreshing = ref(false)
 const loadingMore = ref(false)
 const noMore = ref(false)
-const useMock = ref(true) // 开发阶段使用 Mock 数据
+const useMock = ref(false) // 开发阶段使用 Mock 数据
 
 function onPickupDateChange(e) {
   pickupDate.value = e.detail.value

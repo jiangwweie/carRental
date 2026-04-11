@@ -1,13 +1,30 @@
 <template>
   <view class="container">
-    <!-- User Info Card -->
-    <view class="user-card">
+    <!-- User Info Card - 已登录 -->
+    <view v-if="isLoggedIn" class="user-card">
+      <image
+        v-if="userInfo.avatarUrl"
+        class="avatar"
+        :src="userInfo.avatarUrl"
+        mode="aspectFill"
+      />
+      <view v-else class="avatar-wrapper">
+        <text class="avatar-text">👤</text>
+      </view>
+      <view class="user-info">
+        <text class="nickname">{{ userInfo.nickName || '租车用户' }}</text>
+        <text class="phone">{{ maskPhone(userInfo.phone) }}</text>
+      </view>
+    </view>
+
+    <!-- User Info Card - 未登录 -->
+    <view v-else class="user-card user-card--not-login" @click="goToLogin">
       <view class="avatar-wrapper">
         <text class="avatar-text">👤</text>
       </view>
       <view class="user-info">
-        <text class="nickname">租车用户</text>
-        <text class="phone">点击登录</text>
+        <text class="nickname">点击登录</text>
+        <text class="phone">登录后享受更多服务</text>
       </view>
     </view>
 
@@ -29,12 +46,26 @@
         <text class="menu-arrow">></text>
       </view>
     </view>
+
+    <!-- 退出登录 - 已登录时显示 -->
+    <view v-if="isLoggedIn" class="logout-section">
+      <view class="logout-btn" @click="handleLogout">
+        <text class="logout-text">退出登录</text>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { useUserStore } from '../../store/user.js'
 import { useAuthGuard } from '../../utils/auth-guard.js'
+
+const userStore = useUserStore()
+
+const userInfo = computed(() => userStore.userInfo || {})
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 onShow(() => {
   useAuthGuard()
@@ -42,6 +73,28 @@ onShow(() => {
 
 function navigateTo(url) {
   uni.navigateTo({ url })
+}
+
+function goToLogin() {
+  uni.navigateTo({ url: '/pages/login/login' })
+}
+
+function maskPhone(phone) {
+  if (!phone || phone.length < 7) return phone || ''
+  return phone.slice(0, 3) + '****' + phone.slice(-4)
+}
+
+function handleLogout() {
+  uni.showModal({
+    title: '提示',
+    content: '确定要退出登录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        userStore.logout()
+        uni.switchTab({ url: '/pages/index/index' })
+      }
+    }
+  })
 }
 </script>
 
@@ -57,6 +110,17 @@ function navigateTo(url) {
   padding: 60rpx 30rpx 40rpx;
   background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
   color: #fff;
+}
+
+.user-card--not-login {
+  cursor: pointer;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
 }
 
 .avatar-wrapper {
@@ -122,5 +186,24 @@ function navigateTo(url) {
 .menu-arrow {
   font-size: 28rpx;
   color: #ccc;
+}
+
+.logout-section {
+  margin-top: 40rpx;
+  padding: 0 30rpx;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  background: #fff;
+  border-radius: 12rpx;
+}
+
+.logout-text {
+  font-size: 30rpx;
+  color: #e64340;
 }
 </style>
