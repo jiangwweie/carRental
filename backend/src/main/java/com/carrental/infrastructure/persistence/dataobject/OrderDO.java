@@ -25,12 +25,13 @@ public class OrderDO {
     private BigDecimal totalPrice;
 
     @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
-    private List<Object> priceBreakdown;
+    private List<com.carrental.domain.order.PriceBreakdown> priceBreakdown;
 
     private String status;
     private String paymentStatus;
     private String paymentId;
     private LocalDateTime paidAt;
+    private String rejectReason;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

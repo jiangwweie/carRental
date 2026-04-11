@@ -13,5 +13,9 @@ public interface VehicleRepository {
 
     Vehicle save(Vehicle vehicle);
 
+    List<Vehicle> findAllVehicles(int page, int pageSize);
+
+    long countAllVehicles();
+
     void softDelete(Long id);
 }

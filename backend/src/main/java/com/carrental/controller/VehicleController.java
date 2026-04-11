@@ -58,10 +58,28 @@ public class VehicleController {
      * 车辆详情（公开）
      */
     @GetMapping("/{id}")
-    public ApiResponse<Vehicle> detail(@PathVariable Long id) {
+    public ApiResponse<VehicleDetailVO> detail(@PathVariable Long id) {
         return vehicleRepository.findById(id)
+                .filter(Vehicle::isActive)
+                .map(this::toDetailVO)
                 .map(ApiResponse::success)
-                .orElse(ApiResponse.error(4004, "车辆不存在"));
+                .orElse(ApiResponse.error(4004, "车辆不存在或已下架"));
+    }
+
+    private VehicleDetailVO toDetailVO(Vehicle v) {
+        VehicleDetailVO vo = new VehicleDetailVO();
+        vo.setId(v.getId());
+        vo.setName(v.getName());
+        vo.setBrand(v.getBrand());
+        vo.setSeats(v.getSeats());
+        vo.setTransmission(v.getTransmission());
+        vo.setDescription(v.getDescription());
+        vo.setImages(v.getImages());
+        vo.setWeekdayPrice(v.getWeekdayPrice());
+        vo.setWeekendPrice(v.getWeekendPrice());
+        vo.setHolidayPrice(v.getHolidayPrice());
+        vo.setTags(v.getTags());
+        return vo;
     }
 
     private VehicleListItemDTO toListDTO(Vehicle vehicle) {
@@ -87,5 +105,20 @@ public class VehicleController {
         private String coverImage;
         private java.math.BigDecimal weekdayPrice;
         private java.math.BigDecimal weekendPrice;
+    }
+
+    @Data
+    public static class VehicleDetailVO {
+        private Long id;
+        private String name;
+        private String brand;
+        private Integer seats;
+        private String transmission;
+        private String description;
+        private List<String> images;       // base64 数组
+        private java.math.BigDecimal weekdayPrice;
+        private java.math.BigDecimal weekendPrice;
+        private java.math.BigDecimal holidayPrice;
+        private List<String> tags;
     }
 }

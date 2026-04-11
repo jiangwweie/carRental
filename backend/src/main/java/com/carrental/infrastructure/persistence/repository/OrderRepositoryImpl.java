@@ -102,10 +102,12 @@ public class OrderRepositoryImpl implements OrderRepository {
         order.setEndDate(orderDO.getEndDate());
         order.setDays(orderDO.getDays());
         order.setTotalPrice(orderDO.getTotalPrice());
+        order.setPriceBreakdown(orderDO.getPriceBreakdown());
         order.setStatus(OrderStatus.valueOf(orderDO.getStatus()));
         order.setPaymentStatus(orderDO.getPaymentStatus());
         order.setPaymentId(orderDO.getPaymentId());
         order.setPaidAt(orderDO.getPaidAt());
+        order.setRejectReason(orderDO.getRejectReason());
         order.setCreatedAt(orderDO.getCreatedAt());
         order.setUpdatedAt(orderDO.getUpdatedAt());
         return order;
@@ -120,10 +122,12 @@ public class OrderRepositoryImpl implements OrderRepository {
         orderDO.setEndDate(order.getEndDate());
         orderDO.setDays(order.getDays());
         orderDO.setTotalPrice(order.getTotalPrice());
+        orderDO.setPriceBreakdown(order.getPriceBreakdown());
         orderDO.setStatus(order.getStatus().name());
         orderDO.setPaymentStatus(order.getPaymentStatus());
         orderDO.setPaymentId(order.getPaymentId());
         orderDO.setPaidAt(order.getPaidAt());
+        orderDO.setRejectReason(order.getRejectReason());
         return orderDO;
     }
 }

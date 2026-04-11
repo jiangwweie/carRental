@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS orders (
     paid_at         DATETIME DEFAULT NULL,
     deposit_amount  DECIMAL(10,2) DEFAULT NULL,
     deposit_status  VARCHAR(20) DEFAULT NULL,
+    reject_reason   VARCHAR(500) DEFAULT NULL,
     insurance_id    BIGINT DEFAULT NULL,
     coupon_id       BIGINT DEFAULT NULL,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

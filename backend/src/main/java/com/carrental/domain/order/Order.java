@@ -24,6 +24,7 @@ public class Order {
     private String paymentStatus;
     private String paymentId;
     private LocalDateTime paidAt;
+    private String rejectReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

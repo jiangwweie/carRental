@@ -26,6 +26,16 @@ public class AuthController {
     }
 
     /**
+     * 模拟登录（Sprint 1 开发用，跳过微信流程）
+     */
+    @PostMapping("/mock-login")
+    public ApiResponse<AuthService.LoginResult> mockLogin(@RequestBody MockLoginRequest request) {
+        String role = request.getRole() != null ? request.getRole() : "user";
+        AuthService.LoginResult result = authService.mockLogin(role);
+        return ApiResponse.success(result);
+    }
+
+    /**
      * PC 管理端登录
      */
     @PostMapping("/admin-login")
@@ -33,5 +43,10 @@ public class AuthController {
         String password = request.get("password");
         AuthService.LoginResult result = authService.adminLogin(password);
         return ApiResponse.success(result);
+    }
+
+    @lombok.Data
+    public static class MockLoginRequest {
+        private String role;  // "user" 或 "admin"
     }
 }

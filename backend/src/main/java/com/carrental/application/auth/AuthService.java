@@ -93,6 +93,30 @@ public class AuthService {
     }
 
     /**
+     * Sprint 1 模拟登录：直接返回 demo 用户的 JWT token
+     * 不依赖微信 SDK，便于前端开发和联调
+     */
+    public LoginResult mockLogin(String role) {
+        String openid = "admin".equals(role) ? "wx_demo_admin_001" : "wx_demo_user_001";
+
+        User user = userRepository.findByOpenid(openid)
+                .orElseGet(() -> {
+                    User newUser = new User(
+                            "admin".equals(role) ? "13800000001" : "13800000002",
+                            openid,
+                            "admin".equals(role) ? "管理员" : "张三"
+                    );
+                    if ("admin".equals(role)) {
+                        newUser.setRole("admin");
+                    }
+                    return userRepository.save(newUser);
+                });
+
+        String token = jwtUtil.generateToken(user.getId(), user.getRole());
+        return new LoginResult(token, toUserDTO(user), false);
+    }
+
+    /**
      * PC 管理端登录
      */
     public LoginResult adminLogin(String password) {

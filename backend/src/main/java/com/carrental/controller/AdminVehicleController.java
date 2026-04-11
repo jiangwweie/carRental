@@ -28,7 +28,7 @@ public class AdminVehicleController {
     public ApiResponse<List<Vehicle>> list() {
         // 简单实现：返回所有车辆
         // 实际应该分页，这里简化处理
-        List<Vehicle> vehicles = vehicleRepository.findActiveVehicles(1, 1000);
+        List<Vehicle> vehicles = vehicleRepository.findAllVehicles(1, 1000);
         return ApiResponse.success(vehicles);
     }
 

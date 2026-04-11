@@ -33,7 +33,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/v1/auth/**",           // 登录接口
                         "/api/v1/vehicles/**",       // 车辆列表/详情(公开)
-                        "/api/v1/agreement"          // 用户协议(公开)
+                        "/api/v1/agreement",          // 用户协议(公开)
+                        "/api/v1/pricing/**"          // 价格预估(公开)
                 );
 
         // 角色拦截器：仅管理员端路径

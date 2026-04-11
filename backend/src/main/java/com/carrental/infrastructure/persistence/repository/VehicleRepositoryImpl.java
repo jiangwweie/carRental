@@ -38,6 +38,22 @@ public class VehicleRepositoryImpl implements VehicleRepository {
     }
 
     @Override
+    public List<Vehicle> findAllVehicles(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        LambdaQueryWrapper<VehicleDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByDesc(VehicleDO::getCreatedAt);
+        wrapper.last("LIMIT " + pageSize + " OFFSET " + offset);
+        List<VehicleDO> vehicleDOs = vehicleMapper.selectList(wrapper);
+        return vehicleDOs.stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public long countAllVehicles() {
+        LambdaQueryWrapper<VehicleDO> wrapper = new LambdaQueryWrapper<>();
+        return vehicleMapper.selectCount(wrapper);
+    }
+
+    @Override
     public Vehicle save(Vehicle vehicle) {
         VehicleDO vehicleDO = toDO(vehicle);
         if (vehicle.getId() == null) {

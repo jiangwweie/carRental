@@ -1,14 +1,20 @@
 package com.carrental.controller;
 
+import com.carrental.common.exception.BusinessException;
 import com.carrental.common.result.ApiResponse;
+import com.carrental.common.result.ErrorCode;
 import com.carrental.domain.order.Order;
 import com.carrental.domain.order.OrderRepository;
+import com.carrental.domain.order.PriceBreakdown;
 import com.carrental.domain.order.service.OrderConflictChecker;
+import com.carrental.domain.vehicle.Vehicle;
+import com.carrental.domain.vehicle.VehicleRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -23,6 +29,7 @@ public class OrderController {
 
     private final OrderRepository orderRepository;
     private final OrderConflictChecker conflictChecker;
+    private final VehicleRepository vehicleRepository;
 
     /**
      * 创建订单
@@ -34,8 +41,28 @@ public class OrderController {
 
         Long userId = (Long) httpRequest.getAttribute("userId");
 
+        // 校验用户已同意租赁协议
+        if (request.getAgreed() == null || !request.getAgreed()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "请先同意租赁协议");
+        }
+
+        // 查询车辆信息
+        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "车辆不存在"));
+
         // 检查时间冲突
         conflictChecker.checkConflict(request.getVehicleId(), request.getStartDate(), request.getEndDate());
+
+        // 计算天数
+        int days = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
+
+        // 后端算价（临时实现，待 PricingEngine 完成后替换）
+        BigDecimal totalPrice = vehicle.getWeekdayPrice().multiply(BigDecimal.valueOf(days));
+        List<PriceBreakdown> priceBreakdown = new java.util.ArrayList<>();
+        for (int i = 0; i < days; i++) {
+            LocalDate date = request.getStartDate().plusDays(i);
+            priceBreakdown.add(new PriceBreakdown(date, "weekday", vehicle.getWeekdayPrice()));
+        }
 
         // 创建订单
         Order order = new Order();
@@ -43,7 +70,9 @@ public class OrderController {
         order.setVehicleId(request.getVehicleId());
         order.setStartDate(request.getStartDate());
         order.setEndDate(request.getEndDate());
-        order.setDays((int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()));
+        order.setDays(days);
+        order.setTotalPrice(totalPrice);
+        order.setPriceBreakdown(priceBreakdown);
         order.setStatus(com.carrental.domain.order.OrderStatus.PENDING);
         order.setPaymentStatus("unpaid");
 
@@ -130,6 +159,7 @@ public class OrderController {
         private Long vehicleId;
         private LocalDate startDate;
         private LocalDate endDate;
+        private Boolean agreed;
     }
 
     @Data
