@@ -41,4 +41,9 @@ public interface HolidayRepository {
      * @return 保存后的节假日列表（含生成的 ID）
      */
     List<Holiday> batchSave(List<Holiday> holidays);
+
+    /**
+     * 根据 ID 删除节假日
+     */
+    void deleteById(Long id);
 }

@@ -1,6 +1,6 @@
 # 项目进度 - 租车应用
 
-## 当前阶段: Sprint 2.5 - 核心流程验证（Mock → 真实 API）
+## 当前阶段: Sprint 3 - 体验优化（PC 管理端完善 + 小程序筛选）
 
 ### 分阶段规划
 
@@ -9,7 +9,7 @@
 | **Sprint 1: Demo** | 小程序用户端核心流程跑通（浏览→选车→下单→查看订单） | ~15h | ✅ 已完成 |
 | **Sprint 2: 管理** | PC 管理端 + 小程序管理端（车辆管理 + 订单处理 + 契约修复） | ~16h | ✅ 已完成 |
 | **Sprint 2.5: 核心验证** | 关闭 Mock + 真实 API 全流程 + 个人中心 + 全局登录检查 | ~2.5h | ✅ 已完成 |
-| **Sprint 3: 优化** | 节假日配置 UI + 首页筛选 + 订单筛选 + PC 订单详情 + 微信登录 + 订阅消息 | ~6.5h | 📋 规划中 |
+| **Sprint 3: 优化** | 节假日配置 UI + 首页筛选 + 订单筛选 + PC 订单详情 + 角标 | ~5.5h | ✅ 已完成 |
 | **Sprint 4: 支付** | 微信支付 + 退款 + OSS + 完整定价 | ~10.5h | 📋 规划中（需外部条件） |
 
 ### Sprint 2 已完成总结
@@ -17,6 +17,48 @@
 - PC 管理端：车辆管理（CRUD + 上下架 + 批量定价）、订单管理（列表+确认+拒绝+完成）、仪表盘、价格设置、协议管理
 - 后端 API 增强：节假日定价管理 + 协议版本递增 + 契约合规修复
 - 契约合规修复（12 文件）：Jackson snake_case + 6 后端修复 + 6 前端修复 + 103/103 测试通过
+
+---
+
+### 2026-04-11 收工 - Sprint 3 体验优化完成（T7-T13 全部完成）
+
+**会话阶段**: 架构师设计 + PM 并行调度 + 3 Agent 并行开发
+**参与者**: 用户（调度）+ Claude Code（PM + 架构师 + 开发）
+
+#### 完成工作
+
+- **架构设计文档**（`docs/arch/sprint3-design.md`）
+  - 7 项任务逐一评估：现状分析 + API 契约检查 + 组件设计
+  - 识别 2 项后端变更（DELETE 节假日 + 订单详情 API）
+
+- **后端 API 新增（2 项，6 文件修改）**
+  - T7: 节假日 DELETE API — Repository 接口 + Impl 实现 + Service 方法 + Controller 端点
+  - T12: 管理端订单详情 API — AdminOrderController 新增 GET /{id}，返回 OrderDetailVO + userPhone
+
+- **PC 管理端前端（T7/T11/T12/T13，4 项）**
+  - T7: 新建 `HolidayView.vue`（年份选择器 + el-table 列表 + el-dialog 新增 + el-popconfirm 删除）+ `holiday.js` API 模块
+  - T11: DashboardView.vue 新增本月订单数/本月收入两个统计卡片
+  - T12: 新建 `OrderDetailView.vue`（基本信息 + 车辆 + 租期 + 价格明细 + 拒绝原因）+ 列表"查看详情"按钮
+  - T13: Layout.vue 侧边栏"订单管理"显示待确认数量 el-badge 角标
+  - 路由: 新增 `/holidays` 和 `/orders/:id` 路由
+
+- **小程序端前端（T8/T9/T10，3 项）**
+  - T8: index.vue 新增价格区间标签按钮（全部/0-200/200-400/400+），点击传 minPrice/maxPrice 参数
+  - T9: orders.vue 新增已取消/已拒绝 Tab + 补充 `.status-rejected` 样式
+  - T10: booking.vue 新增取车指引卡片（地址 + 营业时间 + 注意事项）
+
+- **构建验证**
+  - `npm run build:mp-weixin` 编译通过
+  - `npm run build` (PC admin) 编译通过
+  - 后端 103 单元测试全部通过（0 failures）
+
+- **Bug 修复**
+  - VehicleView.vue 新增车辆 snake_case 字段映射修复（前端 camelCase → 后端 snake_case）
+  - VehicleView.vue / PricingView.vue 列表响应解析修复（`res.data.data` → `res.data.data.items`）
+  - MySQL Seed 数据 UTF-8 乱码修复（latin1 编码数据清空后用 utf8mb4 重新插入）
+  - Flyway V2 schema history 修复（标记失败迁移为成功）
+  - OrderConflictChecker 缺少 @Service 注解修复
+  - SimplePricingEngineTest 测试替补全 deleteById 方法
 
 ---
 
@@ -497,12 +539,18 @@
 | P2-1 | 真实微信登录 | US-01 | 前后端 | 1h | 📋 |
 | P2-2 | 订阅消息推送 | US-07 | 前后端 | 2h | 📋 |
 | P2-3 | 全局 loading + 错误处理 | US-25 | 前端 | 1h | 📋 |
-| P2-4 | 首页筛选（价格区间） | US-16 | 前端 | 0.5h | 📋 |
+| P2-4 | 首页筛选（价格区间） | US-16 | 前端 | 0.5h | ✅ 完成（T8） |
 | P2-5 | 取车地址可配置 | US-22 | 前后端 | 1h | 📋 |
 | P2-6 | PC 管理端 - 价格设置 | US-11 | 前端 | 2h | ✅ 完成（Sprint 2 提前完成） |
 | P2-7 | PC 管理端 - 协议管理 | US-06 | 前后端 | 1h | ✅ 完成（Sprint 2 提前完成） |
+| T7 | PC 节假日配置 UI | US-11 | 前端 | 2h | ✅ 完成（Sprint 3） |
+| T9 | 订单筛选补全已取消/已拒绝 | US-05 | 小程序 | 0.5h | ✅ 完成（Sprint 3） |
+| T10 | booking 页完善取车指引 | US-22 | 小程序 | 0.5h | ✅ 完成（Sprint 3） |
+| T11 | Dashboard 补充本月数据卡片 | US-08 | PC | 0.5h | ✅ 完成（Sprint 3） |
+| T12 | PC 管理端 - 订单详情页 | US-10 | PC | 1.5h | ✅ 完成（Sprint 3） |
+| T13 | PC 待确认订单角标 | US-23 | PC | 0.5h | ✅ 完成（Sprint 3） |
 
-**Sprint 3 进度**: 2/7 完成（已提前到 Sprint 2 完成）| 📋 待开始
+**Sprint 3 进度**: 9/11 完成（T14/T15 需外部条件）| ✅ 已完成
 
 ---
 
@@ -600,5 +648,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (Sprint 2.5 核心流程验证完成 - T1/T2/T3 全部通过)*
+*最后更新: 2026-04-11 (Sprint 3 体验优化完成 - T7/T8/T9/T10/T11/T12/T13 全部通过)*
 *项目经理: Claude Code PM*

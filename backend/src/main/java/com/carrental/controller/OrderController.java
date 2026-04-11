@@ -317,6 +317,7 @@ public class OrderController {
     @Data
     public static class OrderDetailVO {
         private Long id;
+        private String userPhone;
         private VehicleInfo vehicle;
         private LocalDate startDate;
         private LocalDate endDate;

@@ -76,6 +76,11 @@ public class HolidayRepositoryImpl implements HolidayRepository {
         return holidays;
     }
 
+    @Override
+    public void deleteById(Long id) {
+        holidayConfigMapper.deleteById(id);
+    }
+
     // ====== DO <-> Domain 转换 ======
 
     private Holiday toDomain(HolidayConfigDO configDO) {

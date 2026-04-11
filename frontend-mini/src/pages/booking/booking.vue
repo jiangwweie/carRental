@@ -26,7 +26,33 @@
       </view>
       <view class="info-row">
         <text class="label">取车地址</text>
-        <text class="value address">XX市XX区XX路XX号</text>
+        <text class="value address">{{ pickupInfo.address }}</text>
+      </view>
+    </view>
+
+    <!-- 取车指引 -->
+    <view class="pickup-guide-card">
+      <text class="section-title">取车指引</text>
+      <view class="guide-row">
+        <text class="guide-icon">📍</text>
+        <view class="guide-content">
+          <text class="guide-label">取车地址</text>
+          <text class="guide-value">{{ pickupInfo.address }}</text>
+        </view>
+      </view>
+      <view class="guide-row">
+        <text class="guide-icon">🕐</text>
+        <view class="guide-content">
+          <text class="guide-label">营业时间</text>
+          <text class="guide-value">{{ pickupInfo.hours }}</text>
+        </view>
+      </view>
+      <view class="guide-row">
+        <text class="guide-icon">💡</text>
+        <view class="guide-content">
+          <text class="guide-label">注意事项</text>
+          <text class="guide-value">{{ pickupInfo.note }}</text>
+        </view>
       </view>
     </view>
 
@@ -81,6 +107,13 @@ import { useAuthGuard } from '../../utils/auth-guard.js'
 onShow(() => {
   useAuthGuard()
 })
+
+// 取车信息常量（与后端 OrderController.buildPickupAddress 保持一致）
+const pickupInfo = {
+  address: 'XX市XX区XX路XX号',
+  hours: '周一至周日 09:00-18:00',
+  note: '下单后请与车主确认取车时间'
+}
 
 // 路由参数
 const vehicleId = ref(null)
@@ -279,6 +312,51 @@ async function onSubmit() {
   margin: 20rpx;
   border-radius: 16rpx;
   padding: 30rpx;
+}
+
+/* 取车指引卡片 */
+.pickup-guide-card {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.guide-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.guide-row:last-child {
+  border-bottom: none;
+}
+
+.guide-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  width: 40rpx;
+  text-align: center;
+}
+
+.guide-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.guide-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.guide-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
 }
 
 .section-title {

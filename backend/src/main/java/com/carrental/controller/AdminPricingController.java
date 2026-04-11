@@ -60,6 +60,16 @@ public class AdminPricingController {
         return ApiResponse.success(result);
     }
 
+    /**
+     * 删除节假日配置
+     * DELETE /api/v1/admin/pricing/holidays/{id}
+     */
+    @DeleteMapping("/holidays/{id}")
+    public ApiResponse<?> deleteHoliday(@PathVariable Long id) {
+        holidayAdminService.deleteHoliday(id);
+        return ApiResponse.success("已删除");
+    }
+
     // ====== DTO 转换 ======
 
     private HolidayDTO toDTO(Holiday holiday) {

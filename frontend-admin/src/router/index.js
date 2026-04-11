@@ -31,6 +31,18 @@ const routes = [
         meta: { title: '订单管理' }
       },
       {
+        path: 'orders/:id',
+        name: 'OrderDetail',
+        component: () => import('../views/orders/OrderDetailView.vue'),
+        meta: { title: '订单详情' }
+      },
+      {
+        path: 'holidays',
+        name: 'Holidays',
+        component: () => import('../views/holiday/HolidayView.vue'),
+        meta: { title: '节假日管理' }
+      },
+      {
         path: 'pricing',
         name: 'Pricing',
         component: () => import('../views/pricing/PricingView.vue'),

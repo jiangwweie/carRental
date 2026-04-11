@@ -26,6 +26,21 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <el-row :gutter="20" style="margin-top: 20px">
+      <el-col :span="12">
+        <el-card>
+          <template #header>本月订单数</template>
+          <div class="stat-value">{{ stats.month_orders }}</div>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card>
+          <template #header>本月收入</template>
+          <div class="stat-value">¥{{ stats.month_revenue }}</div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 

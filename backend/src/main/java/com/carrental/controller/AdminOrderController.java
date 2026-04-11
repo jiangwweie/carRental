@@ -4,6 +4,7 @@ import com.carrental.common.result.ApiResponse;
 import com.carrental.domain.order.Order;
 import com.carrental.domain.order.OrderRepository;
 import com.carrental.domain.order.OrderStatus;
+import com.carrental.domain.order.PriceBreakdown;
 import com.carrental.domain.user.User;
 import com.carrental.domain.user.UserRepository;
 import com.carrental.domain.vehicle.Vehicle;
@@ -12,6 +13,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +62,104 @@ public class AdminOrderController {
                 .collect(Collectors.toList()));
 
         return ApiResponse.success(result);
+    }
+
+    /**
+     * 订单详情（含用户手机号）
+     * GET /api/v1/admin/orders/{id}
+     */
+    @GetMapping("/{id}")
+    public ApiResponse<OrderController.OrderDetailVO> detail(@PathVariable Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("订单不存在"));
+
+        User user = userRepository.findById(order.getUserId()).orElse(null);
+        Vehicle vehicle = vehicleRepository.findById(order.getVehicleId()).orElse(null);
+
+        OrderController.OrderDetailVO vo = toDetailVO(order, vehicle);
+        if (user != null && user.getPhone() != null) {
+            vo.setUserPhone(user.getPhone());
+        }
+        return ApiResponse.success(vo);
+    }
+
+    // ====== 数据转换 ======
+
+    private OrderController.OrderDetailVO toDetailVO(Order order, Vehicle vehicle) {
+        OrderController.OrderDetailVO vo = new OrderController.OrderDetailVO();
+        vo.setId(order.getId());
+        vo.setStartDate(order.getStartDate());
+        vo.setEndDate(order.getEndDate());
+        vo.setDays(order.getDays());
+        vo.setTotalPrice(order.getTotalPrice());
+        vo.setStatus(order.getStatus().name());
+        vo.setStatusLabel(order.getStatus().getLabel());
+        vo.setStatusSteps(buildStatusSteps(order.getStatus()));
+        vo.setPaymentStatus(order.getPaymentStatus());
+        vo.setPriceBreakdown(order.getPriceBreakdown());
+        vo.setPickupAddress(buildPickupAddress());
+        vo.setCanCancel(order.getStatus() == OrderStatus.PENDING);
+        vo.setRejectReason(order.getRejectReason());
+        vo.setCreatedAt(order.getCreatedAt());
+
+        if (vehicle != null) {
+            OrderController.OrderDetailVO.VehicleInfo vi = new OrderController.OrderDetailVO.VehicleInfo();
+            vi.setId(vehicle.getId());
+            vi.setName(vehicle.getName());
+            vi.setImages(vehicle.getImages());
+            vo.setVehicle(vi);
+        }
+        return vo;
+    }
+
+    private List<Map<String, Object>> buildStatusSteps(OrderStatus currentStatus) {
+        List<Map<String, Object>> steps = new ArrayList<>();
+
+        if (currentStatus == OrderStatus.CANCELLED) {
+            addStep(steps, "已取消", true, true);
+            return steps;
+        }
+        if (currentStatus == OrderStatus.REJECTED) {
+            addStep(steps, "已拒绝", true, true);
+            return steps;
+        }
+
+        String[] labels = {"待确认", "已确认", "进行中", "已完成"};
+        OrderStatus[] statuses = {
+                OrderStatus.PENDING, OrderStatus.CONFIRMED,
+                OrderStatus.IN_PROGRESS, OrderStatus.COMPLETED
+        };
+
+        int currentIdx = 0;
+        for (int i = 0; i < statuses.length; i++) {
+            if (statuses[i] == currentStatus) {
+                currentIdx = i;
+                break;
+            }
+        }
+
+        for (int i = 0; i < labels.length; i++) {
+            boolean completed = i <= currentIdx;
+            boolean current = i == currentIdx;
+            addStep(steps, labels[i], completed, current);
+        }
+        return steps;
+    }
+
+    private OrderController.OrderDetailVO.PickupAddress buildPickupAddress() {
+        OrderController.OrderDetailVO.PickupAddress addr = new OrderController.OrderDetailVO.PickupAddress();
+        addr.setAddress("北京市朝阳区XX路XX号");
+        addr.setHours("周一至周日 08:00-20:00");
+        addr.setNote("下单后请与车主确认取车时间");
+        return addr;
+    }
+
+    private void addStep(List<Map<String, Object>> steps, String label, boolean completed, boolean current) {
+        Map<String, Object> step = new HashMap<>();
+        step.put("label", label);
+        step.put("completed", completed);
+        step.put("current", current);
+        steps.add(step);
     }
 
     /**

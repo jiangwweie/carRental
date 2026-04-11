@@ -152,4 +152,14 @@ public class HolidayAdminService {
                                    LocalDate start2, LocalDate end2) {
         return !end1.isBefore(start2) && !start1.isAfter(end2);
     }
+
+    /**
+     * 删除节假日配置
+     */
+    @Transactional
+    public void deleteHoliday(Long id) {
+        Holiday holiday = holidayRepository.findById(id)
+            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "节假日不存在"));
+        holidayRepository.deleteById(id);
+    }
 }

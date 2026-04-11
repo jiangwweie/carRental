@@ -68,7 +68,7 @@ async function loadVehicles() {
     headers: { Authorization: `Bearer ${getToken()}` }
   })
   if (res.data.code === 0) {
-    vehicles.value = res.data.data
+    vehicles.value = res.data.data.items || res.data.data
     const prices = {}
     for (const v of vehicles.value) {
       prices[v.id] = {

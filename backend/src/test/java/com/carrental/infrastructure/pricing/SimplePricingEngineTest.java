@@ -266,6 +266,7 @@ class SimplePricingEngineTest {
         @Override public List<Holiday> findOverlappingWith(LocalDate startDate, LocalDate endDate) { return new ArrayList<>(); }
         @Override public Holiday save(Holiday holiday) { return holiday; }
         @Override public List<Holiday> batchSave(List<Holiday> holidays) { return holidays; }
+        @Override public void deleteById(Long id) {}
     }
 
     /**
@@ -289,5 +290,6 @@ class SimplePricingEngineTest {
         }
         @Override public Holiday save(Holiday holiday) { return holiday; }
         @Override public List<Holiday> batchSave(List<Holiday> holidays) { return holidays; }
+        @Override public void deleteById(Long id) {}
     }
 }

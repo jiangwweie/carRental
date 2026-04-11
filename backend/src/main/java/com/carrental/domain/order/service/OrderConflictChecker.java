@@ -3,6 +3,7 @@ package com.carrental.domain.order.service;
 import com.carrental.common.exception.BusinessException;
 import com.carrental.common.result.ErrorCode;
 import com.carrental.domain.order.OrderRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
@@ -10,6 +11,7 @@ import java.time.LocalDate;
  * 订单冲突检测领域服务
  * 检查同一辆车在同一时间段是否已被预订
  */
+@Service
 public class OrderConflictChecker {
 
     private final OrderRepository orderRepository;

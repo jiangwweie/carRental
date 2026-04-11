@@ -63,7 +63,9 @@ const tabList = [
   { label: '待确认', value: 'pending' },
   { label: '已确认', value: 'confirmed' },
   { label: '进行中', value: 'in_progress' },
-  { label: '已完成', value: 'completed' }
+  { label: '已完成', value: 'completed' },
+  { label: '已取消', value: 'cancelled' },
+  { label: '已拒绝', value: 'rejected' }
 ]
 
 // Status enum to Chinese label mapping
@@ -258,6 +260,10 @@ async function handleCancel(id) {
 
 .status-cancelled {
   color: #ccc;
+}
+
+.status-rejected {
+  color: #ff4d4f;
 }
 
 .order-body {

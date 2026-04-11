@@ -18,6 +18,19 @@
       <button class="search-btn" @click="loadVehicles">查看可用车辆</button>
     </view>
 
+    <!-- 价格区间筛选 -->
+    <view class="price-filter">
+      <view
+        v-for="item in priceRanges"
+        :key="item.label"
+        class="price-pill"
+        :class="{ 'price-pill-active': selectedPriceRange === item.label }"
+        @click="selectPriceRange(item)"
+      >
+        <text class="pill-text">{{ item.label }}</text>
+      </view>
+    </view>
+
     <!-- 加载中 -->
     <view v-if="loading && vehicles.length === 0" class="loading">
       <text>加载中...</text>
@@ -27,7 +40,7 @@
     <view v-else-if="!loading && vehicles.length === 0" class="empty">
       <text class="empty-icon">🚗</text>
       <text class="empty-text">暂无可用车辆</text>
-      <text class="empty-hint">请尝试更换取还车日期</text>
+      <text class="empty-hint">请尝试更换取还车日期或价格区间</text>
       <button class="retry-btn" @click="loadVehicles">刷新试试</button>
     </view>
 
@@ -124,6 +137,20 @@ const loadingMore = ref(false)
 const noMore = ref(false)
 const useMock = ref(false) // 开发阶段使用 Mock 数据
 
+// 价格区间筛选
+const priceRanges = [
+  { label: '全部', min: null, max: null },
+  { label: '¥0-200', min: 0, max: 200 },
+  { label: '¥200-400', min: 200, max: 400 },
+  { label: '¥400+', min: 400, max: null }
+]
+const selectedPriceRange = ref('全部')
+
+function selectPriceRange(item) {
+  selectedPriceRange.value = item.label
+  loadVehicles()
+}
+
 function onPickupDateChange(e) {
   pickupDate.value = e.detail.value
   if (returnDate.value < pickupDate.value) {
@@ -140,17 +167,32 @@ async function loadVehicles(isRefresh = false, isLoadMore = false) {
   if (isRefresh) refreshing.value = true
   if (!isRefresh && !isLoadMore) loading.value = true
 
+  // 获取当前选中的价格区间
+  const currentRange = priceRanges.find(r => r.label === selectedPriceRange.value) || priceRanges[0]
+  const minPrice = currentRange.min
+  const maxPrice = currentRange.max
+
   try {
     if (useMock.value) {
       // 模拟网络延迟
       await new Promise(resolve => setTimeout(resolve, 600))
-      vehicles.value = [...MOCK_VEHICLES]
+      let result = [...MOCK_VEHICLES]
+      if (minPrice !== null) {
+        result = result.filter(v => v.weekdayPrice >= minPrice)
+      }
+      if (maxPrice !== null) {
+        result = result.filter(v => v.weekdayPrice < maxPrice)
+      }
+      vehicles.value = result
       noMore.value = true
     } else {
-      const res = await getVehicleList({
+      const params = {
         page: isLoadMore ? Math.ceil(vehicles.value.length / 10) + 1 : 1,
         page_size: 10
-      })
+      }
+      if (minPrice !== null) params.minPrice = minPrice
+      if (maxPrice !== null) params.maxPrice = maxPrice
+      const res = await getVehicleList(params)
       if (isLoadMore) {
         vehicles.value = [...vehicles.value, ...(res.items || [])]
       } else {
@@ -162,7 +204,14 @@ async function loadVehicles(isRefresh = false, isLoadMore = false) {
     console.error('加载车辆列表失败，使用Mock数据', err)
     // API 失败时降级到 Mock
     useMock.value = true
-    vehicles.value = [...MOCK_VEHICLES]
+    let result = [...MOCK_VEHICLES]
+    if (minPrice !== null) {
+      result = result.filter(v => v.weekdayPrice >= minPrice)
+    }
+    if (maxPrice !== null) {
+      result = result.filter(v => v.weekdayPrice < maxPrice)
+    }
+    vehicles.value = result
     noMore.value = true
   } finally {
     loading.value = false
@@ -249,6 +298,37 @@ onMounted(() => {
   border: none;
   height: 80rpx;
   line-height: 80rpx;
+}
+
+/* 价格区间筛选 */
+.price-filter {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 20rpx 0;
+  flex-wrap: nowrap;
+}
+
+.price-pill {
+  flex-shrink: 0;
+  background: #fff;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 40rpx;
+  padding: 10rpx 28rpx;
+}
+
+.price-pill-active {
+  background: #764ba2;
+  border-color: #764ba2;
+}
+
+.pill-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.price-pill-active .pill-text {
+  color: #fff;
+  font-weight: 500;
 }
 
 /* 加载状态 */

@@ -20,6 +20,7 @@
           <el-button v-if="row.status === 'pending'" size="small" type="danger" @click="rejectOrder(row)">拒绝</el-button>
           <el-button v-if="row.status === 'confirmed'" size="small" @click="startOrder(row)">开始</el-button>
           <el-button v-if="row.status === 'in_progress'" size="small" @click="completeOrder(row)">完成</el-button>
+          <el-button size="small" @click="viewDetail(row)">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -28,9 +29,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
+const router = useRouter()
 const orders = ref([])
 const statusFilter = ref('')
 
@@ -83,5 +86,9 @@ async function completeOrder(row) {
   })
   ElMessage.success('订单已完成')
   loadOrders()
+}
+
+function viewDetail(row) {
+  router.push(`/orders/${row.id}`)
 }
 </script>

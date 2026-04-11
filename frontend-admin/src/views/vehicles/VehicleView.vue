@@ -80,7 +80,7 @@ async function loadVehicles() {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (res.data.code === 0) {
-    vehicles.value = res.data.data
+    vehicles.value = res.data.data.items || res.data.data
   } else {
     ElMessage.error(res.data.message || '加载失败')
   }
@@ -154,8 +154,16 @@ async function handleSubmit() {
 
   const token = localStorage.getItem('token')
   const payload = {
-    ...form.value,
-    images: imagesInput.value.split('\n').map(s => s.trim()).filter(Boolean)
+    name: form.value.name,
+    brand: form.value.brand,
+    seats: form.value.seats,
+    transmission: form.value.transmission,
+    description: form.value.description,
+    images: imagesInput.value.split('\n').map(s => s.trim()).filter(Boolean),
+    tags: form.value.tags,
+    weekday_price: form.value.weekdayPrice,
+    weekend_price: form.value.weekendPrice,
+    holiday_price: form.value.holidayPrice
   }
 
   try {

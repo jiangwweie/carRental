@@ -10,13 +10,19 @@
           <el-icon><Van /></el-icon>
           <span>车辆管理</span>
         </el-menu-item>
-        <el-menu-item index="/orders">
-          <el-icon><List /></el-icon>
-          <span>订单管理</span>
-        </el-menu-item>
+        <el-badge :value="pendingCount" :hidden="pendingCount === 0" :max="99" class="menu-badge">
+          <el-menu-item index="/orders">
+            <el-icon><List /></el-icon>
+            <span>订单管理</span>
+          </el-menu-item>
+        </el-badge>
         <el-menu-item index="/pricing">
           <el-icon><PriceTag /></el-icon>
           <span>价格设置</span>
+        </el-menu-item>
+        <el-menu-item index="/holidays">
+          <el-icon><Calendar /></el-icon>
+          <span>节假日管理</span>
         </el-menu-item>
         <el-menu-item index="/agreement">
           <el-icon><Document /></el-icon>
@@ -36,6 +42,27 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import { Calendar } from '@element-plus/icons-vue'
+
+const pendingCount = ref(0)
+
+async function loadPendingCount() {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await axios.get('/api/v1/admin/dashboard/overview', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (res.data.code === 0) {
+      pendingCount.value = res.data.data.pending_orders || 0
+    }
+  } catch (err) {
+    console.error('加载待确认订单数量失败', err)
+  }
+}
+
+onMounted(loadPendingCount)
 </script>
 
 <style scoped>
@@ -57,5 +84,13 @@
 
 .el-main {
   background: #f5f5f5;
+}
+
+.menu-badge {
+  width: 100%;
+}
+
+.menu-badge .el-menu-item {
+  padding: 0 20px;
 }
 </style>
