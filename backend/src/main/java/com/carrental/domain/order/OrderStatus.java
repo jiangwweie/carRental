@@ -1,5 +1,7 @@
 package com.carrental.domain.order;
 
+import java.util.Arrays;
+
 public enum OrderStatus {
     PENDING("待确认"),
     CONFIRMED("已确认"),
@@ -16,5 +18,16 @@ public enum OrderStatus {
 
     public String getLabel() {
         return label;
+    }
+
+    /**
+     * 安全查找：未知值返回 null，不抛异常
+     */
+    public static OrderStatus fromValue(String value) {
+        if (value == null) return null;
+        return Arrays.stream(values())
+                .filter(s -> s.name().equalsIgnoreCase(value))
+                .findFirst()
+                .orElse(null);
     }
 }

@@ -1,6 +1,8 @@
 package com.carrental.infrastructure.persistence.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.carrental.common.exception.BusinessException;
+import com.carrental.common.result.ErrorCode;
 import com.carrental.domain.order.Order;
 import com.carrental.domain.order.OrderRepository;
 import com.carrental.domain.order.OrderStatus;
@@ -103,7 +105,12 @@ public class OrderRepositoryImpl implements OrderRepository {
         order.setDays(orderDO.getDays());
         order.setTotalPrice(orderDO.getTotalPrice());
         order.setPriceBreakdown(orderDO.getPriceBreakdown());
-        order.setStatus(OrderStatus.valueOf(orderDO.getStatus()));
+        OrderStatus status = OrderStatus.fromValue(orderDO.getStatus());
+        if (status == null) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID,
+                    "未知订单状态: " + orderDO.getStatus() + ", 订单ID: " + orderDO.getId());
+        }
+        order.setStatus(status);
         order.setPaymentStatus(orderDO.getPaymentStatus());
         order.setPaymentId(orderDO.getPaymentId());
         order.setPaidAt(orderDO.getPaidAt());

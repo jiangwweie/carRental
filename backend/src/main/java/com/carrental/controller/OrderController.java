@@ -8,6 +8,8 @@ import com.carrental.domain.order.OrderRepository;
 import com.carrental.domain.order.OrderStatus;
 import com.carrental.domain.order.PriceBreakdown;
 import com.carrental.domain.order.service.OrderConflictChecker;
+import com.carrental.domain.pricing.PricingEngine;
+import com.carrental.domain.pricing.PricingResult;
 import com.carrental.domain.vehicle.Vehicle;
 import com.carrental.domain.vehicle.VehicleRepository;
 import lombok.Data;
@@ -15,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -32,13 +37,14 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final OrderConflictChecker conflictChecker;
     private final VehicleRepository vehicleRepository;
+    private final PricingEngine pricingEngine;
 
     /**
      * 创建订单
      */
     @PostMapping
     public ApiResponse<CreateOrderResult> createOrder(
-            @RequestBody CreateOrderRequest request,
+            @Valid @RequestBody CreateOrderRequest request,
             HttpServletRequest httpRequest) {
 
         Long userId = (Long) httpRequest.getAttribute("userId");
@@ -58,13 +64,22 @@ public class OrderController {
         // 计算天数
         int days = (int) ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
 
-        // 后端算价（临时实现，待 PricingEngine 完成后替换）
-        BigDecimal totalPrice = vehicle.getWeekdayPrice().multiply(BigDecimal.valueOf(days));
-        List<PriceBreakdown> priceBreakdown = new java.util.ArrayList<>();
-        for (int i = 0; i < days; i++) {
-            LocalDate date = request.getStartDate().plusDays(i);
-            priceBreakdown.add(new PriceBreakdown(date, "weekday", vehicle.getWeekdayPrice()));
-        }
+        // 使用定价引擎算价
+        PricingResult pricingResult = pricingEngine.calculate(
+                vehicle.getWeekdayPrice(),
+                vehicle.getWeekendPrice(),
+                vehicle.getHolidayPrice(),
+                request.getStartDate(),
+                request.getEndDate()
+        );
+        BigDecimal totalPrice = pricingResult.getTotalPrice();
+        List<PriceBreakdown> priceBreakdown = pricingResult.getDayPrices().stream()
+                .map(dp -> new PriceBreakdown(
+                        LocalDate.parse(dp.getDate()),
+                        dp.getType(),
+                        dp.getPrice()
+                ))
+                .collect(Collectors.toList());
 
         // 创建订单
         Order order = new Order();
@@ -129,7 +144,7 @@ public class OrderController {
     public ApiResponse<OrderDetailVO> detail(@PathVariable Long id, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         Order order = orderRepository.findById(id)
-                .filter(o -> o.getUserId().equals(userId))
+                .filter(o -> Objects.equals(o.getUserId(), userId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "订单不存在"));
 
         Vehicle vehicle = vehicleRepository.findById(order.getVehicleId()).orElse(null);
@@ -143,7 +158,7 @@ public class OrderController {
     public ApiResponse<?> cancelOrder(@PathVariable Long id, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
         return orderRepository.findById(id)
-                .filter(order -> order.getUserId().equals(userId))
+                .filter(order -> Objects.equals(order.getUserId(), userId))
                 .map(order -> {
                     try {
                         order.cancel();
@@ -259,9 +274,13 @@ public class OrderController {
 
     @Data
     public static class CreateOrderRequest {
+        @NotNull(message = "车辆ID不能为空")
         private Long vehicleId;
+        @NotNull(message = "开始日期不能为空")
         private LocalDate startDate;
+        @NotNull(message = "结束日期不能为空")
         private LocalDate endDate;
+        @NotNull(message = "请同意租赁协议")
         private Boolean agreed;
     }
 

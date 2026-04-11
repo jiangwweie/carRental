@@ -32,24 +32,34 @@ public class VehicleController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
 
-        List<Vehicle> vehicles = vehicleRepository.findActiveVehicles(page, pageSize);
-        long total = vehicleRepository.countActiveVehicles();
+        // 1. 取全量 active 车辆（MVP 阶段数据量小，全量加载到内存过滤）
+        long allTotal = vehicleRepository.countActiveVehicles();
+        List<Vehicle> allVehicles = vehicleRepository.findActiveVehicles(1, (int) Math.min(allTotal, 1000));
 
-        // 价格过滤
+        // 2. 价格过滤
+        List<Vehicle> filtered = allVehicles;
         if (minPrice != null || maxPrice != null) {
-            vehicles = vehicles.stream()
+            final Integer fpMin = minPrice;
+            final Integer fpMax = maxPrice;
+            filtered = allVehicles.stream()
                     .filter(v -> {
                         BigDecimal weekday = v.getWeekdayPrice();
-                        if (minPrice != null && weekday.compareTo(new BigDecimal(minPrice)) < 0) return false;
-                        if (maxPrice != null && weekday.compareTo(new BigDecimal(maxPrice)) > 0) return false;
+                        if (fpMin != null && weekday.compareTo(new BigDecimal(fpMin)) < 0) return false;
+                        if (fpMax != null && weekday.compareTo(new BigDecimal(fpMax)) > 0) return false;
                         return true;
                     })
                     .collect(Collectors.toList());
         }
 
+        // 3. 内存分页
+        long total = filtered.size();
+        int fromIndex = Math.min((page - 1) * pageSize, (int) total);
+        int toIndex = Math.min(fromIndex + pageSize, (int) total);
+        List<Vehicle> pageVehicles = filtered.subList(fromIndex, toIndex);
+
         Map<String, Object> result = new HashMap<>();
-        result.put("total", vehicles.size());
-        result.put("items", vehicles.stream().map(this::toListDTO).collect(Collectors.toList()));
+        result.put("total", total);
+        result.put("items", pageVehicles.stream().map(this::toListDTO).collect(Collectors.toList()));
 
         return ApiResponse.success(result);
     }
