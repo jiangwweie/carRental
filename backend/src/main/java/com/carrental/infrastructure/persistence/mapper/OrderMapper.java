@@ -12,21 +12,25 @@ import java.util.List;
 @Mapper
 public interface OrderMapper extends BaseMapper<OrderDO> {
 
-    @Select("SELECT * FROM orders WHERE user_id = #{userId} " +
+    @Select("<script>" +
+            "SELECT * FROM orders WHERE user_id = #{userId} " +
             "<if test='status != null'> AND status = #{status} </if>" +
-            " ORDER BY created_at DESC LIMIT #{pageSize} OFFSET #{offset}")
+            " ORDER BY created_at DESC LIMIT #{pageSize} OFFSET #{offset}" +
+            "</script>")
     List<OrderDO> selectByUserId(@Param("userId") Long userId,
                                  @Param("status") String status,
                                  @Param("offset") int offset,
                                  @Param("pageSize") int pageSize);
 
-    @Select("SELECT COUNT(*) FROM orders WHERE user_id = #{userId}" +
-            "<if test='status != null'> AND status = #{status} </if>")
+    @Select("<script>" +
+            "SELECT COUNT(*) FROM orders WHERE user_id = #{userId}" +
+            "<if test='status != null'> AND status = #{status} </if>" +
+            "</script>")
     long countByUserId(@Param("userId") Long userId, @Param("status") String status);
 
     @Select("SELECT COUNT(*) FROM orders WHERE vehicle_id = #{vehicleId} " +
             "AND status IN ('pending', 'confirmed', 'in_progress') " +
-            "AND start_date &lt; #{endDate} AND end_date &gt; #{startDate}")
+            "AND start_date < #{endDate} AND end_date > #{startDate}")
     long countConflicts(@Param("vehicleId") Long vehicleId,
                         @Param("startDate") LocalDate startDate,
                         @Param("endDate") LocalDate endDate);

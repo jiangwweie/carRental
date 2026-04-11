@@ -27,6 +27,27 @@ function handle401() {
   uni.navigateTo({ url: '/pages/login/login' })
 }
 
+/**
+ * Convert snake_case keys to camelCase.
+ * Backend uses SNAKE_CASE naming strategy, frontend expects camelCase.
+ */
+function snakeToCamel(str) {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+}
+
+function convertKeysToCamelCase(obj) {
+  if (obj === null || obj === undefined) return obj
+  if (Array.isArray(obj)) return obj.map(convertKeysToCamelCase)
+  if (typeof obj !== 'object') return obj
+
+  const result = {}
+  for (const key of Object.keys(obj)) {
+    const camelKey = snakeToCamel(key)
+    result[camelKey] = convertKeysToCamelCase(obj[key])
+  }
+  return result
+}
+
 export function request(options) {
   const needLoading = options.showLoading !== false
 
@@ -61,7 +82,8 @@ export function request(options) {
         }
 
         if (res.data.code === 0) {
-          resolve(res.data.data)
+          // Convert backend snake_case response to camelCase for frontend consistency
+          resolve(convertKeysToCamelCase(res.data.data))
         } else {
           // 401 / token expired in business response
           if (isUnauthorized(res.data.message)) {

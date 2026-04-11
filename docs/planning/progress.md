@@ -1,6 +1,6 @@
 # 项目进度 - 租车应用
 
-## 当前阶段: Sprint 2.6 - 开发者体验 + 管理端小程序化（✅ 已完成）
+## 当前阶段: 管理员端集成测试（✅ 已完成）
 
 ### 分阶段规划
 
@@ -12,6 +12,49 @@
 | **Sprint 3: 优化** | 节假日配置 UI + 首页筛选 + 订单筛选 + PC 订单详情 + 角标 | ~5.5h | ✅ 已完成 |
 | **Sprint 2.6: 体验** | 开发者体验修复 + 小程序管理端 + TabBar 图标 | ~2h | ✅ 已完成 |
 | **Sprint 4: 支付** | 微信支付 + 退款 + OSS + 完整定价 | ~10.5h | 📋 规划中（需外部条件） |
+
+---
+
+### 2026-04-12 收工 - 管理员端集成测试（26 个测试，全部通过）
+
+**会话阶段**: 管理员端用户故事集成测试
+**参与者**: 用户（调度）+ Claude Code（PM 调度 + 开发 + 测试）
+
+#### 完成工作
+
+- **管理员端集成测试**（`backend/src/test/java/com/carrental/admin/AdminIntegrationTest.java`）
+  - 新建 26 个测试用例，覆盖 6 个管理员用户故事
+  - 5 个测试嵌套类，使用 MockMvc standalone setup + snake_case ObjectMapper
+  - **全部 129 个测试通过**（26 新增 + 103 现有，0 failures）
+
+- **测试覆盖详情**:
+  | 用户故事 | 测试类 | 用例数 | 覆盖范围 |
+  |---------|--------|--------|---------|
+  | US-08/US-24: 仪表盘 | DashboardTests | 1 | 7 个指标 + snake_case 验证 |
+  | US-09: 车辆管理 | VehicleManagementTests | 7 | 创建/更新/404/上下架/删除/批量改价 |
+  | US-10/12/13: 订单管理 | OrderManagementTests | 11 | 列表筛选/详情/确认/拒绝/开始/完成 |
+  | US-11: 节假日定价 | HolidayPricingTests | 4 | 列表/创建/批量/删除 |
+  | US-06: 协议管理 | AgreementManagementTests | 3 | 更新/版本递增/旧协议失效 |
+
+- **发现的问题**:
+  | # | 发现 | 严重程度 | 说明 |
+  |---|------|---------|------|
+  | 1 | 订单详情手机号未脱敏 | P1 | AdminOrderController.toDetailVO() 直接返回原始手机号 |
+  | 2 | 订单确认/拒绝后未发送订阅消息 | P1 | TODO 注释，通知功能未实现 |
+  | 3 | 批量价格更新静默跳过不存在的车辆 | P2 | 无警告提示 |
+
+- **后端代码修改（未提交变更）**:
+  - MyBatisPlusConfig.java: 新增配置
+  - OrderDO.java / VehicleDO.java: DO 字段映射修正
+  - OrderMapper.java: Mapper 方法增强
+  - VehicleRepositoryImpl.java: Repository 修复
+  - frontend-mini request.js: 超时配置
+
+- **数据库迁移脚本（未提交）**:
+  - V3__add_reject_reason_to_orders.sql
+  - V4__add_vehicle_placeholder_images.sql
+
+---
 
 ### Sprint 2 已完成总结
 
@@ -689,5 +732,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (Sprint 2.6 完成 - P2 管理端 + P3 开发者体验 + T18 TabBar 图标)*
+*最后更新: 2026-04-12 (管理员端集成测试 26/26 通过，总计 129 测试)*
 *项目经理: Claude Code PM*

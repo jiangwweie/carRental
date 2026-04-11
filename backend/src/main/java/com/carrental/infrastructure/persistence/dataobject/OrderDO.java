@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@TableName("orders")
+@TableName(value = "orders", autoResultMap = true)
 public class OrderDO {
 
     @TableId(type = IdType.AUTO)

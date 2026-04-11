@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("vehicles")
+@TableName(value = "vehicles", autoResultMap = true)
 public class VehicleDO {
 
     @TableId(type = IdType.AUTO)
