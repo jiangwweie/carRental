@@ -37,7 +37,7 @@
       <button
         class="login-btn"
         :class="{ 'login-btn--disabled': !agreed }"
-        :disabled="loading"
+        :disabled="loading || !agreed"
         @click="onLogin"
       >
         <text v-if="loading">登录中...</text>

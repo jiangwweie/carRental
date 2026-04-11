@@ -4,13 +4,13 @@
     <view v-else-if="vehicle">
       <!-- 图片轮播 -->
       <view class="swiper-wrapper">
-        <swiper class="swiper" circular :indicator-dots="false" autoplay>
+        <swiper class="swiper" circular :indicator-dots="false" autoplay @change="onSwiperChange">
           <swiper-item v-for="(img, idx) in displayImages" :key="idx">
             <image class="swiper-img" :src="img" mode="aspectFill" />
           </swiper-item>
         </swiper>
         <view class="page-indicator">
-          <text class="indicator-text">{{ currentImage + 1 }} / {{ displayImages.length }}</text>
+          <text class="indicator-text">{{ currentImageIndex + 1 }} / {{ displayImages.length }}</text>
         </view>
       </view>
 
@@ -36,14 +36,18 @@
       <view class="rental-card">
         <text class="section-title">选择租期</text>
         <view class="picker-row">
-          <view class="picker-item" @click="openStartPicker">
-            <text class="picker-label">取车日期</text>
-            <text class="picker-value">{{ startDate || '请选择' }}</text>
-          </view>
-          <view class="picker-item" @click="openEndPicker">
-            <text class="picker-label">还车日期</text>
-            <text class="picker-value">{{ endDate || '请选择' }}</text>
-          </view>
+          <picker mode="date" :value="startPickerValue || minDate" :start="minDate" @change="onStartDateChange">
+            <view class="picker-item">
+              <text class="picker-label">取车日期</text>
+              <text class="picker-value">{{ startDate || '请选择' }}</text>
+            </view>
+          </picker>
+          <picker mode="date" :value="endPickerValue || startPickerValue || minDate" :start="startPickerValue || minDate" @change="onEndDateChange">
+            <view class="picker-item">
+              <text class="picker-label">还车日期</text>
+              <text class="picker-value">{{ endDate || '请选择' }}</text>
+            </view>
+          </picker>
         </view>
         <view class="rental-summary" v-if="days > 0">
           <text class="summary-text">共 {{ days }} 天</text>
@@ -51,14 +55,6 @@
         </view>
       </view>
     </view>
-
-    <!-- 日期选择器（原生 picker） -->
-    <picker mode="date" :value="startPickerValue" :start="minDate" @change="onStartDateChange">
-      <view ref="startPickerRef" style="position: fixed; left: -9999px; top: -9999px;"></view>
-    </picker>
-    <picker mode="date" :value="endPickerValue" :start="startPickerValue || minDate" @change="onEndDateChange">
-      <view ref="endPickerRef" style="position: fixed; left: -9999px; top: -9999px;"></view>
-    </picker>
 
     <!-- 底部固定按钮 -->
     <view class="bottom-bar" v-if="vehicle">
@@ -77,7 +73,11 @@ const vehicle = ref(null)
 const vehicleId = ref(null)
 
 // 图片轮播
-const currentImage = ref(0)
+const currentImageIndex = ref(0)
+
+function onSwiperChange(e) {
+  currentImageIndex.value = e.detail.current
+}
 
 // 租期选择
 const startDate = ref('')
@@ -150,55 +150,6 @@ async function fetchDetail() {
   } finally {
     loading.value = false
   }
-}
-
-// 日期选择逻辑：使用隐藏的 picker 触发原生选择器
-function openStartPicker() {
-  uni.showDatePicker ? useNativeDatePicker('start') : useFallbackDatePicker('start')
-}
-
-function openEndPicker() {
-  uni.showDatePicker ? useNativeDatePicker('end') : useFallbackDatePicker('end')
-}
-
-function useNativeDatePicker(type) {
-  // fallback: 使用 uni.showToast 提示
-  useFallbackDatePicker(type)
-}
-
-function useFallbackDatePicker(type) {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
-  const day = String(today.getDate()).padStart(2, '0')
-  const defaultVal = type === 'start' ? (startDate.value || `${year}-${month}-${day}`) : (endDate.value || `${year}-${month}-${day}`)
-
-  uni.showModal({
-    title: type === 'start' ? '选择取车日期' : '选择还车日期',
-    editable: true,
-    placeholderText: `请输入日期 如: ${year}-${month}-${day}`,
-    defaultValue: defaultVal,
-    success: (res) => {
-      if (res.confirm && res.content) {
-        const val = res.content.trim()
-        if (isValidDate(val)) {
-          if (type === 'start') {
-            startDate.value = val
-            startPickerValue.value = val
-          } else {
-            endDate.value = val
-            endPickerValue.value = val
-          }
-        } else {
-          uni.showToast({ title: '日期格式不正确', icon: 'none' })
-        }
-      }
-    }
-  })
-}
-
-function isValidDate(str) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(str) && !isNaN(new Date(str).getTime())
 }
 
 function onStartDateChange(e) {

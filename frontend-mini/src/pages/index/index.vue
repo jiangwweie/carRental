@@ -112,7 +112,9 @@ const formatDate = (d) => {
 
 const minDate = formatDate(today)
 const pickupDate = ref(minDate)
-const returnDate = ref(minDate)
+const tomorrow = new Date(today)
+tomorrow.setDate(tomorrow.getDate() + 1)
+const returnDate = ref(formatDate(tomorrow))
 
 // 列表状态
 const vehicles = ref([])

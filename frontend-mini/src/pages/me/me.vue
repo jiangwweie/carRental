@@ -55,7 +55,7 @@ function navigateTo(url) {
   display: flex;
   align-items: center;
   padding: 60rpx 30rpx 40rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
   color: #fff;
 }
 
