@@ -15,6 +15,49 @@
 
 ## Sprint 1: Demo（当前）
 
+### 2026-04-11 开工 - QA 审查 + 5 个 P0 Bug 修复 + API 补全
+
+**会话阶段**: 架构审查 + 后端 Bug 修复 + API 补全
+**参与者**: 用户（需求确认）+ Claude Code（3 Agent 并行）
+
+#### 完成工作
+
+- **架构设计输出**（architecture-p0-1-to-8.md）
+  - P0-1~P0-8 逐个任务的现状分析、分层设计、文件清单、依赖关系
+  - 识别 3 个风险点（seed 数据空图片、OrderDO 类型擦除、Domain 暴露）
+
+- **QA 审查**（sprint1-coverage-report.md）
+  - 14 个 Sprint 1 用户故事逐一对照验收标准
+  - 发现 5 个 P0 Bug、6 个边界条件缺口、4 个安全隐患
+  - 9 个 API 不一致问题 + 5 个缺失端点
+  - 前端 8 个页面缺失清单
+
+- **后端 P0 Bug 修复**（5 个全部修复）
+  - BUG-01: AdminVehicleController 改为返回所有车辆（含下架）
+  - BUG-02: OrderDO.priceBreakdown 类型修复 + Repository 双向转换
+  - BUG-03: Order + OrderDO 新增 rejectReason 字段 + V1 建表脚本
+  - BUG-04: OrderController.createOrder() 新增 agreed 协议校验
+  - BUG-05: OrderController.createOrder() 新增后端算价
+
+- **API 补全**
+  - 新建 PricingController + SimplePricingEngine（POST /pricing/estimate）
+  - 新建 Mock Login 端点（POST /auth/mock-login）
+  - VehicleController.detail() 改为 VehicleDetailVO（不再暴露 Domain）
+  - WebMvcConfig 排除 /api/v1/pricing/** 路径
+
+- **数据修复**
+  - V2 seed 数据 5 辆车的 images 从 `[]` 改为 base64 占位图数组
+
+- **编译修复**
+  - Lombok 升级到 1.18.44（修复 JDK 兼容性问题）
+  - pom.xml 添加 maven-compiler-plugin --add-opens 配置
+
+#### Git 提交
+- `8e7f7cc` feat: 为 Vehicle 实体新增 tags 标签字段
+- `09b4c42` fix: 修复 5 个 P0 Bug + 新建 Pricing API + Mock Login
+
+---
+
 ### 2026-04-10 收工 - 产品规划 + 架构更新 + 后端编译修复
 
 **会话阶段**: 全天的需求讨论 + 架构更新 + 规划
@@ -66,13 +109,13 @@
 
 | # | 任务 | 用户故事 | 类型 | 预估 | 状态 |
 |---|------|---------|------|------|------|
-| P0-1 | 车辆数据初始化 SQL | - | 后端 | 0.5h | ⏳ |
-| P0-2 | 完善车辆列表 API（base64 图片） | US-02, US-17 | 后端 | 0.5h | ⏳ |
-| P0-3 | 完善车辆详情 API（images 数组） | US-03, US-17 | 后端 | 0.5h | ⏳ |
-| P0-4 | 实现 Pricing Estimate API | US-18 | 后端 | 1h | ⏳ |
-| P0-5 | 完善订单创建 API（后端算价 + 冲突检测） | US-04 | 后端 | 1h | ⏳ |
+| P0-1 | 车辆数据初始化 SQL + base64 图片 | - | 后端 | 0.5h | ✅ 完成 |
+| P0-2 | 完善车辆列表 API（base64 图片） | US-02, US-17 | 后端 | 0.5h | ✅ 完成 |
+| P0-3 | 完善车辆详情 API（images 数组） | US-03, US-17 | 后端 | 0.5h | ✅ 完成 |
+| P0-4 | 实现 Pricing Estimate API | US-18 | 后端 | 1h | ✅ 完成 |
+| P0-5 | 完善订单创建 API（后端算价 + 冲突检测） | US-04 | 后端 | 1h | ✅ 完成 |
 | P0-6 | 完善订单列表/详情 API（两查询组合） | US-05, US-19 | 后端 | 1h | ⏳ |
-| P0-7 | 登录简化方案（模拟登录 bypass 微信） | US-01, US-21 | 前后端 | 1h | ⏳ |
+| P0-7 | 登录简化方案（模拟登录 bypass 微信） | US-01, US-21 | 后端 | 1h | ✅ 完成 |
 | P0-8 | TabBar 补全（首页/订单/我的） | - | 前端 | 0.5h | ⏳ |
 | P0-9 | 首页（取车信息 + 车辆卡片 + 空状态） | US-02, US-15, US-25 | 前端 | 2h | ⏳ |
 | P0-10 | 车辆详情页（图片轮播 + 租期选择） | US-03, US-17, US-18 | 前端 | 2h | ⏳ |
@@ -83,7 +126,17 @@
 | P0-15 | 用户协议页 | US-06 | 前端 | 0.5h | ⏳ |
 | P0-16 | 登录态拦截（无 token 跳转 + 401 处理） | US-21 | 前端 | 0.5h | ⏳ |
 
-**Sprint 1 总计**: ~15h | **已完成**: 0h | **剩余**: ~15h
+**Sprint 1 总计**: ~15h | **已完成**: ~4.5h | **剩余**: ~10.5h
+
+### 已知问题（待处理）
+
+| # | 问题 | 优先级 | 说明 |
+|---|------|--------|------|
+| 1 | Admin 登录端点契约不一致 | P1 | API 要求 phone+password，当前只有 password |
+| 2 | Dashboard 缺少 monthRevenue | P1 | 概览接口数据不完整 |
+| 3 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
+| 4 | P0-6 订单列表/详情缺车辆信息组合 | P0 | 前端订单页的前置依赖，待开发 |
+| 5 | 前端全部 8 个页面缺失 | P0 | .vue 文件未创建 |
 
 ---
 
