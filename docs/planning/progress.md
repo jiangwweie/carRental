@@ -1,6 +1,6 @@
 # 项目进度 - 租车应用
 
-## 当前阶段: Sprint 3 - 体验优化（PC 管理端完善 + 小程序筛选）
+## 当前阶段: Sprint 2.6 - 开发者体验 + 管理端小程序化（✅ 已完成）
 
 ### 分阶段规划
 
@@ -10,6 +10,7 @@
 | **Sprint 2: 管理** | PC 管理端 + 小程序管理端（车辆管理 + 订单处理 + 契约修复） | ~16h | ✅ 已完成 |
 | **Sprint 2.5: 核心验证** | 关闭 Mock + 真实 API 全流程 + 个人中心 + 全局登录检查 | ~2.5h | ✅ 已完成 |
 | **Sprint 3: 优化** | 节假日配置 UI + 首页筛选 + 订单筛选 + PC 订单详情 + 角标 | ~5.5h | ✅ 已完成 |
+| **Sprint 2.6: 体验** | 开发者体验修复 + 小程序管理端 + TabBar 图标 | ~2h | ✅ 已完成 |
 | **Sprint 4: 支付** | 微信支付 + 退款 + OSS + 完整定价 | ~10.5h | 📋 规划中（需外部条件） |
 
 ### Sprint 2 已完成总结
@@ -601,13 +602,53 @@
 
 ---
 
-## Sprint 2.5: 核心流程验证（建议立即做，~2.5h）
+### Sprint 2.5: 核心流程验证（建议立即做，~2.5h）
 
 | # | 任务 | 端 | 预估 | 状态 | 说明 |
 |---|------|-----|------|------|------|
 | T1 | 关闭 Mock 数据，对接真实 API | 小程序 | 1h | ✅ | index.vue useMock=false，验证浏览→选车→预订→订单全流程 |
 | T2 | 个人中心动态用户信息 + 退出登录 | 小程序 | 1h | ✅ | me.vue 读 userStore，加退出登录按钮 |
 | T3 | 全局登录态检查 | 小程序 | 0.5h | ✅ | App.vue onShow 公开页面白名单守卫 + login.vue 支持返回来源页 + auth-guard 传递 redirectTo |
+
+## Sprint 2.6: 开发者体验 + 管理端小程序化（~2h）
+
+| # | 任务 | 端 | 预估 | 状态 | 说明 |
+|---|------|-----|------|------|------|
+| T4 | 小程序管理端入口 | 小程序 | 1h | ✅ | 管理端身份标识 + 入口，基于 userRole 判断 |
+| T5 | 小程序管理端 - 订单处理 | 小程序 | 2h | ✅ | 查看/确认/拒绝订单，7 状态 Tab 筛选 |
+| T6 | 小程序管理端 - 简易仪表盘 | 小程序 | 0.5h | ✅ | 今日订单/待确认/可租车辆，3 张统计卡片 |
+| T16 | request.js 超时缩短 | 前端 | 0.1h | ✅ | 从默认值改为 5000ms |
+| T17 | manifest.json 填入 AppID | 前端 | 0.1h | ✅ | 填入测试 AppID wxffc042f0b83d2419 |
+| T18 | TabBar 图标添加 | 前端 | 0.5h | ✅ | 3 组图标（首页/订单/我的），灰/绿双色 |
+
+#### 完成工作
+
+- **架构设计文档**（`docs/planning/sprint2.6-design.md`）
+  - P3 开发者体验优化：3 项简单修复，无需设计直接执行
+  - P2 小程序管理端：页面流程 + 权限控制 + 文件清单
+
+- **P3 快速修复（3 项）**
+  - `request.js`: 新增 `timeout: 5000` 参数
+  - `manifest.json`: 填入测试 AppID `wxffc042f0b83d2419`
+  - `user.js`: `uni.login()` 包裹 try-catch，失败降级到 mockLogin
+
+- **P2 小程序管理端（3 新文件 + 3 修改）**
+  - `src/api/admin.js`: 管理端 API 模块（getAdminOrders/confirmOrder/rejectOrder/getDashboardOverview）
+  - `pages/admin-dashboard/admin-dashboard.vue`: 仪表盘（待处理/营收/进行中 3 张卡片 + 快捷操作）
+  - `pages/admin-orders/admin-orders.vue`: 订单管理（7 状态 Tab + 确认/拒绝 + 原因输入）
+  - `store/user.js`: 新增 `userRole` 计算属性
+  - `pages/me/me.vue`: role=admin 时显示"管理端"入口
+  - `pages.json`: 注册 2 个管理端页面
+
+- **TabBar 图标（6 个 PNG 文件）**
+  - `static/tabbar/`: 首页(房子)/订单(剪贴板)/我的(人形)，各灰/绿双色
+  - `pages.json`: 配置 iconPath 和 selectedIconPath
+
+- **构建验证**
+  - `npm run dev:mp-weixin` 编译通过，图标打包到 dist
+  - 后端 103 单元测试全部通过
+
+---
 
 ## Sprint 3: 小程序管理端 + 体验优化（~6.5h）
 
@@ -648,5 +689,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (Sprint 3 体验优化完成 - T7/T8/T9/T10/T11/T12/T13 全部通过)*
+*最后更新: 2026-04-11 (Sprint 2.6 完成 - P2 管理端 + P3 开发者体验 + T18 TabBar 图标)*
 *项目经理: Claude Code PM*

@@ -47,6 +47,14 @@
       "style": {
         "navigationBarTitleText": "用户协议"
       }
+    },
+    {
+      "path": "pages/admin-dashboard/admin-dashboard",
+      "style": { "navigationBarTitleText": "管理端" }
+    },
+    {
+      "path": "pages/admin-orders/admin-orders",
+      "style": { "navigationBarTitleText": "订单管理" }
     }
   ],
   "globalStyle": {
@@ -63,15 +71,21 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-selected.png"
       },
       {
         "pagePath": "pages/orders/orders",
-        "text": "订单"
+        "text": "订单",
+        "iconPath": "static/tabbar/orders.png",
+        "selectedIconPath": "static/tabbar/orders-selected.png"
       },
       {
         "pagePath": "pages/me/me",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/tabbar/me.png",
+        "selectedIconPath": "static/tabbar/me-selected.png"
       }
     ]
   }

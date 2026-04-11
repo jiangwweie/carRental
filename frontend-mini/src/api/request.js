@@ -40,6 +40,7 @@ export function request(options) {
       url: `${BASE_URL}${options.url}`,
       method: options.method || 'GET',
       data: options.data || {},
+      timeout: 5000,
       header: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})

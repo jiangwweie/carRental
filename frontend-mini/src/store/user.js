@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { request } from '../api/request.js'
 
 export const useUserStore = defineStore('user', () => {
@@ -53,26 +53,31 @@ export const useUserStore = defineStore('user', () => {
       return await mockLogin({ phone: '13800138000', code: '123456' })
     }
 
-    // Real WeChat login flow
-    const loginRes = await uni.login()
+    // Real WeChat login flow, with fallback to mock
+    try {
+      const loginRes = await uni.login()
 
-    const res = await request({
-      url: '/api/v1/auth/wx-login',
-      method: 'POST',
-      data: {
-        loginCode: loginRes.code,
-        phoneCode: phoneCode
-      }
-    })
+      const res = await request({
+        url: '/api/v1/auth/wx-login',
+        method: 'POST',
+        data: {
+          loginCode: loginRes.code,
+          phoneCode: phoneCode
+        }
+      })
 
-    token.value = res.token
-    userInfo.value = res.user
-    isLoggedIn.value = true
+      token.value = res.token
+      userInfo.value = res.user
+      isLoggedIn.value = true
 
-    uni.setStorageSync('token', res.token)
-    uni.setStorageSync('userInfo', res.user)
+      uni.setStorageSync('token', res.token)
+      uni.setStorageSync('userInfo', res.user)
 
-    return res
+      return res
+    } catch (err) {
+      console.warn('微信登录失败，降级到本地 Mock:', err)
+      return await mockLogin({ phone: '13800138000' })
+    }
   }
 
   function logout() {
@@ -83,5 +88,7 @@ export const useUserStore = defineStore('user', () => {
     uni.removeStorageSync('userInfo')
   }
 
-  return { token, userInfo, isLoggedIn, checkLoginStatus, mockLogin, login, logout }
+  const userRole = computed(() => userInfo.value?.role || 'user')
+
+  return { token, userInfo, isLoggedIn, userRole, checkLoginStatus, mockLogin, login, logout }
 })

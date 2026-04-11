@@ -47,6 +47,16 @@
       </view>
     </view>
 
+    <!-- 管理端入口 - 仅管理员可见 -->
+    <view v-if="userRole === 'admin'" class="menu-section">
+      <text class="menu-section-title">管理端</text>
+      <view class="menu-item" @click="navigateTo('/pages/admin-dashboard/admin-dashboard')">
+        <text class="menu-icon">🛠️</text>
+        <text class="menu-text">管理端</text>
+        <text class="menu-arrow">></text>
+      </view>
+    </view>
+
     <!-- 退出登录 - 已登录时显示 -->
     <view v-if="isLoggedIn" class="logout-section">
       <view class="logout-btn" @click="handleLogout">
@@ -66,6 +76,7 @@ const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo || {})
 const isLoggedIn = computed(() => userStore.isLoggedIn)
+const userRole = computed(() => userStore.userRole)
 
 onShow(() => {
   useAuthGuard()
@@ -157,6 +168,12 @@ function handleLogout() {
 .menu-section {
   margin-top: 20rpx;
   background: #fff;
+}
+
+.menu-section-title {
+  padding: 16rpx 30rpx 8rpx;
+  font-size: 24rpx;
+  color: #999;
 }
 
 .menu-item {
