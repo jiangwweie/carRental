@@ -36,6 +36,26 @@ paths:
         '4002':
           description: 手机号获取失败
 
+  /auth/mock-login:
+    post:
+      summary: 模拟登录（Sprint 1 开发用）
+      description: 跳过微信授权流程，直接生成登录态，Demo 阶段使用
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MockLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
   /auth/admin-login:
     post:
       summary: PC 管理端登录
@@ -104,6 +124,79 @@ paths:
                         $ref: '#/components/schemas/VehicleDetail'
         '4004':
           description: 车辆不存在
+
+  # ==================== 价格模块（公开） ====================
+  /pricing/estimate:
+    post:
+      summary: 价格预估
+      description: 根据车辆和租期计算预估价格，Sprint 1 MVP 实现为 days × weekday_price
+      tags: [Pricing]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vehicle_id, start_date, end_date]
+              properties:
+                vehicle_id:
+                  type: integer
+                  format: int64
+                  description: 车辆 ID
+                start_date:
+                  type: string
+                  format: date
+                  description: 取车日期
+                end_date:
+                  type: string
+                  format: date
+                  description: 还车日期
+      responses:
+        '200':
+          description: 价格预估结果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicle_id:
+                    type: integer
+                    format: int64
+                  vehicle_name:
+                    type: string
+                  start_date:
+                    type: string
+                    format: date
+                  end_date:
+                    type: string
+                    format: date
+                  days:
+                    type: integer
+                    description: 租用天数
+                  total_price:
+                    type: number
+                    format: double
+                  price_breakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        type:
+                          type: string
+                          enum: [weekday, weekend, holiday]
+                          description: 价格类型
+                        price:
+                          type: number
+                          format: double
+                          description: 当天价格
+        '400':
+          description: 参数错误（日期校验失败）
+        '4004':
+          description: 车辆不存在或已下架
 
   # ==================== 订单模块（用户端） ====================
   /orders:
@@ -567,6 +660,15 @@ components:
           type: string
           description: getUserPhoneNumber 获取的 code
 
+    MockLoginRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, admin]
+          default: user
+          description: 模拟登录角色
+
     AdminLoginRequest:
       type: object
       required: [password]
@@ -619,7 +721,8 @@ components:
           type: integer
         transmission:
           type: string
-          enum: [auto, manual]
+          enum: ["自动", "手动"]
+          description: 变速箱类型（后端存储中文值）
         cover_image:
           type: string
           description: 封面图，取自 images[0]
@@ -646,14 +749,15 @@ components:
           type: integer
         transmission:
           type: string
-          enum: [auto, manual]
+          enum: ["自动", "手动"]
+          description: 变速箱类型（后端存储中文值）
         description:
           type: string
         images:
           type: array
           items:
             type: string
-            format: uri
+            description: base64 编码的图片字符串（MVP 方案，v1.5 迁移到 OSS）
         weekday_price:
           type: string
           format: decimal
@@ -687,7 +791,7 @@ components:
     # ===== 订单相关 =====
     CreateOrderRequest:
       type: object
-      required: [vehicle_id, start_date, end_date]
+      required: [vehicle_id, start_date, end_date, agreed]
       properties:
         vehicle_id:
           type: integer
@@ -698,6 +802,9 @@ components:
         end_date:
           type: string
           format: date
+        agreed:
+          type: boolean
+          description: 是否同意用户协议（必填，未同意则拒绝请求）
 
     PriceBreakdownItem:
       type: object
@@ -726,9 +833,19 @@ components:
           format: date
         days:
           type: integer
+          description: 租用天数
         total_price:
           type: string
           format: decimal
+          description: 后端计算的总价格
+        vehicle_name:
+          type: string
+          description: 车辆名称
+        price_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceBreakdownItem'
+          description: 价格明细（每天的价格类型和金额）
 
     OrderListItem:
       type: object
@@ -747,11 +864,20 @@ components:
         end_date:
           type: string
           format: date
+        days:
+          type: integer
+          description: 租用天数
         total_price:
           type: string
           format: decimal
         status:
           $ref: '#/components/schemas/OrderStatus'
+        status_label:
+          type: string
+          description: 状态中文描述（待确认/已确认/进行中/已完成/已取消/已拒绝）
+        can_cancel:
+          type: boolean
+          description: 是否可取消
         created_at:
           type: string
           format: date-time
@@ -787,12 +913,46 @@ components:
           format: decimal
         status:
           $ref: '#/components/schemas/OrderStatus'
+        status_label:
+          type: string
+          description: 状态中文描述
+        status_steps:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                description: 步骤名称（下单/确认/取车/还车/完成）
+              completed:
+                type: boolean
+                description: 是否已完成
+          description: 订单状态进度条数据
         payment_status:
           $ref: '#/components/schemas/PaymentStatus'
         price_breakdown:
           type: array
           items:
             $ref: '#/components/schemas/PriceBreakdownItem'
+        pickup_address:
+          type: object
+          properties:
+            address:
+              type: string
+              description: 取车地址
+            hours:
+              type: string
+              description: 营业时间
+            note:
+              type: string
+              description: 提示信息
+          description: 取车指引（MVP 硬编码）
+        can_cancel:
+          type: boolean
+          description: 是否可取消
+        reject_reason:
+          type: string
+          description: 拒绝原因（仅当状态为已拒绝时返回）
         created_at:
           type: string
           format: date-time
@@ -841,14 +1001,15 @@ components:
           type: integer
         transmission:
           type: string
-          enum: [auto, manual]
+          enum: ["自动", "手动"]
+          description: 变速箱类型（后端存储中文值）
         description:
           type: string
         images:
           type: array
           items:
             type: string
-            format: uri
+            description: base64 编码的图片字符串（MVP 方案，v1.5 迁移到 OSS）
         weekday_price:
           type: string
           format: decimal

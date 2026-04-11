@@ -48,6 +48,17 @@
 - **数据修复**
   - V2 seed 数据 5 辆车的 images 从 `[]` 改为 base64 占位图数组
 
+- **契约文档修复**
+  - api-spec.yaml 8 项 Sprint 1 缺失项修复：
+    - 新增 `/auth/mock-login` 端点 + MockLoginRequest schema
+    - 新增 `/pricing/estimate` 端点 + 完整请求/响应 schema
+    - CreateOrderRequest 新增 `agreed` 必填字段
+    - CreateOrderResult 新增 `vehicle_name`、`price_breakdown`、`days` 描述
+    - OrderListItem 新增 `days`、`status_label`、`can_cancel`
+    - OrderDetail 新增 `status_label`、`status_steps`、`pickup_address`、`can_cancel`、`reject_reason`
+    - `images` 格式从 `uri` 改为 base64 字符串
+    - `transmission` 枚举从 `auto/manual` 改为 `"自动"/"手动"`
+
 - **编译修复**
   - Lombok 升级到 1.18.44（修复 JDK 兼容性问题）
   - pom.xml 添加 maven-compiler-plugin --add-opens 配置
@@ -138,6 +149,12 @@
 | 4 | P0-6 订单列表/详情缺车辆信息组合 | P0 | 前端订单页的前置依赖，待开发 |
 | 5 | 前端全部 8 个页面缺失 | P0 | .vue 文件未创建 |
 
+### 已修复（本轮）
+
+| # | 修复 | 说明 |
+|---|------|------|
+| - | api-spec.yaml 8 项契约修复 | mock-login + pricing estimate + agreed + vehicle_name + price_breakdown + status_label/steps + base64 images + transmission 枚举对齐 |
+
 ---
 
 ## Sprint 2: 管理功能
@@ -218,5 +235,5 @@
 
 ---
 
-*最后更新: 2026-04-10*
+*最后更新: 2026-04-11 (契约文档修复完成)*
 *项目经理: Claude Code PM*
