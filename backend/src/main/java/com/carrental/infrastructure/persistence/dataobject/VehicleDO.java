@@ -22,6 +22,9 @@ public class VehicleDO {
     @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
     private java.util.List<String> images;
 
+    @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
+    private java.util.List<String> tags;
+
     private BigDecimal weekdayPrice;
     private BigDecimal weekendPrice;
     private BigDecimal holidayPrice;

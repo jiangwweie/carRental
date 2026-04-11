@@ -67,6 +67,7 @@ public class VehicleRepositoryImpl implements VehicleRepository {
         vehicle.setTransmission(vehicleDO.getTransmission());
         vehicle.setDescription(vehicleDO.getDescription());
         vehicle.setImages(vehicleDO.getImages());
+        vehicle.setTags(vehicleDO.getTags());
         vehicle.setWeekdayPrice(vehicleDO.getWeekdayPrice());
         vehicle.setWeekendPrice(vehicleDO.getWeekendPrice());
         vehicle.setHolidayPrice(vehicleDO.getHolidayPrice());
@@ -86,6 +87,7 @@ public class VehicleRepositoryImpl implements VehicleRepository {
         vehicleDO.setTransmission(vehicle.getTransmission());
         vehicleDO.setDescription(vehicle.getDescription());
         vehicleDO.setImages(vehicle.getImages());
+        vehicleDO.setTags(vehicle.getTags());
         vehicleDO.setWeekdayPrice(vehicle.getWeekdayPrice());
         vehicleDO.setWeekendPrice(vehicle.getWeekendPrice());
         vehicleDO.setHolidayPrice(vehicle.getHolidayPrice());

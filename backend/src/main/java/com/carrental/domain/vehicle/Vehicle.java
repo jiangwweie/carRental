@@ -16,6 +16,7 @@ public class Vehicle {
     private String transmission;
     private String description;
     private List<String> images;
+    private List<String> tags;
     private BigDecimal weekdayPrice;
     private BigDecimal weekendPrice;
     private BigDecimal holidayPrice;
