@@ -15,6 +15,56 @@
 
 ---
 
+### 2026-04-12 01:45 - 小程序用户端集成测试 + 后端 Bug 修复（33 项全部通过）
+
+**会话阶段**: 小程序用户故事地图集成测试（US-01 ~ US-25）
+**参与者**: 用户（调度）+ Claude Code（PM + 开发 + 测试）
+
+#### 完成工作
+
+- **小程序用户端集成测试**（33 项测试，33/33 通过 ✅）
+  | 用户故事 | 测试项数 | 结果 |
+  |---------|---------|------|
+  | US-01 登录 | 3 | ✅ 用户/管理员登录 + 用户信息返回 |
+  | US-02 车辆列表 | 2 | ✅ 列表 + 价格筛选 |
+  | US-03 车辆详情 | 2 | ✅ 详情 + 描述 + 下架 404 |
+  | US-04 预订下单 | 4 | ✅ 创建 + 算价 + 冲突检测 + 状态 |
+  | US-06 用户协议 | 2 | ✅ 协议校验 + 内容返回 |
+  | US-05 查看订单 | 6 | ✅ 列表 + 详情 + 取消 + 重复取消 + 筛选 + 数据隔离 |
+  | US-10 管理端订单 | 1 | ✅ 管理员可见 |
+  | US-18 租期选择 | 2 | ✅ 价格预估 + 明细 |
+  | US-19 订单状态 | 1 | ✅ 4 步进度条 |
+  | US-21 登录态管理 | 3 | ✅ 无效 token + 无 token + 管理端权限 |
+  | US-22 取车指引 | 3 | ✅ 地址 + 营业时间 + 提示 |
+  | US-25 空状态 | 1 | ✅ 空订单列表 |
+
+- **后端 Bug 修复（8 项，P0 级别）**:
+  | # | Bug | 修复方案 | 文件 |
+  |---|-----|---------|------|
+  | 1 | MyBatis `<if>` 动态 SQL 未生效 | `@Select` 包裹 `<script>` | OrderMapper.java |
+  | 2 | HTML 实体 `&lt;` 未解码 | 改为 `<` `>` | OrderMapper.java |
+  | 3 | JacksonTypeHandler 不支持 LocalDate | 注册 JavaTimeModule | MyBatisPlusConfig.java |
+  | 4 | 数据库缺少 reject_reason 列 | Flyway V3 迁移 | V3__*.sql |
+  | 5 | 车辆图片 images 为 null | Flyway V4 占位图 | V4__*.sql |
+  | 6 | JSON 字段不序列化 | `@TableName` 加 autoResultMap | VehicleDO.java / OrderDO.java |
+  | 7 | 车辆列表 images 仍为 null | 改用 LambdaQueryWrapper | VehicleRepositoryImpl.java |
+  | 8 | 前后端字段不匹配 (snake_case vs camelCase) | request.js 添加统一转换 | request.js |
+
+- **前端修复**:
+  - `request.js`: 新增 `snakeToCamel()` + `convertKeysToCamelCase()` 统一响应适配
+
+#### Git 提交
+- `d3db9f7` feat: 管理员端集成测试 26 项 + 后端修复 + 进度文档更新
+
+#### 技术发现（记录到 Memory）
+- MyBatis `@Select` 注解中 `<if>` 必须用 `<script>` 包裹
+- MyBatis-Plus JacksonTypeHandler 需注册 JSR310 模块处理 LocalDate
+- MyBatis-Plus `@TableName` 需设置 `autoResultMap = true` 才能正确使用 TypeHandler
+- Spring Boot `@RequestParam` 默认 camelCase，但 `property-naming-strategy: SNAKE_CASE` 影响 JSON 序列化
+- VehicleController DTO 无 `@JsonNaming` 注解，实际走 application.yml SNAKE_CASE 策略
+
+---
+
 ### 2026-04-12 收工 - 管理员端集成测试（26 个测试，全部通过）
 
 **会话阶段**: 管理员端用户故事集成测试
