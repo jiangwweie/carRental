@@ -1,15 +1,42 @@
 # 项目进度 - 租车应用
 
-## 当前阶段: Sprint 1 - Demo 开发中（小程序用户端核心流程）
+## 当前阶段: Sprint 2 - 管理功能开发中（PC 管理端 + 管理 API 增强）
 
 ### 分阶段规划
 
 | 阶段 | 目标 | 预估工时 | 状态 |
 |------|------|---------|------|
 | **Sprint 1: Demo** | 小程序用户端核心流程跑通（浏览→选车→下单→查看订单） | ~15h | ✅ 已完成 |
-| **Sprint 2: 管理** | PC 管理端 + 小程序管理端（车辆管理 + 订单处理） | ~13h | 📋 待开始 |
+| **Sprint 2: 管理** | PC 管理端 + 小程序管理端（车辆管理 + 订单处理） | ~13h | 🔄 进行中 |
 | **Sprint 3: 优化** | 真实微信登录 + 订阅消息 + 体验优化 | ~9.5h | 📋 待开始 |
 | **Sprint 4: 支付** | 微信支付 + 退款 + OSS + 完整定价 | ~10.5h | 📋 规划中 |
+
+---
+
+### 2026-04-11 收工 - Sprint 2 管理后台前端 3 项完成 + 代码审查修复
+
+**会话阶段**: 架构师设计 + 3 Agent 并行开发 + 2 Agent 代码审查 + 自动修复
+**参与者**: 用户（需求确认 + 调度）+ Claude Code（PM + 架构师 + 开发 + 审查）
+
+#### 完成工作
+
+- **架构设计文档**（`docs/arch/admin-frontend-design.md`）
+  - 3 个管理后台功能的完整设计：组件结构、API 契约、状态管理、校验规则
+  - 技术选型决策记录 + 文件变更清单 + 测试策略
+
+- **管理后台前端开发（3 项）**
+  - `VehicleView.vue`: 车辆新增/编辑弹窗（9 字段表单 + 校验 + 图片处理 + 标签选择）
+  - `PricingView.vue`: 价格设置页（内联编辑表格 + 批量保存 + 差异检测 + 单行重置）
+  - `AgreementView.vue`: 协议管理页（textarea 编辑器 + 日期格式化 + 空状态处理 + 预览）
+
+- **后端 API 新增**
+  - `AdminVehicleController.java`: 新增 `PUT /api/v1/admin/vehicles/prices` 批量更新价格端点
+  - 新增 DTO: `BatchUpdatePriceRequest` + `VehiclePriceItem`
+  - 使用 `@Transactional` 保证原子性
+
+- **代码审查 + 自动修复（12 项发现）**
+  - P0 修复: 删除/下架增加确认对话框、updatedAt 格式化、协议空状态处理、PUT 响应码检查
+  - P1 修复: API 响应码校验、错误处理补全、空内容校验、保存失败内容恢复、ElMessageBox catch 精确处理
 
 ---
 
@@ -259,18 +286,24 @@
 
 | # | 问题 | 优先级 | 说明 |
 |---|------|--------|------|
-| 1 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
+| 1 | `request.js` 超时设置 | P2 | 当前默认超时 10 秒，后端不可用时等待过长，建议缩短为 3-5 秒 |
+| 2 | `manifest.json` appid | P2 | 当前为空字符串，注册小程序后需填入真实 AppID |
+| 3 | TabBar 图标缺失 | P3 | TabBar 仅显示文字，后续可添加 iconPath 图标 |
+| 4 | PricingView 无 loading 状态 | P2 | 加载车辆列表时无 loading 指示 |
+| 5 | VehicleView 价格默认值为 0 | P2 | 新增时价格默认 0，但校验规则要求 > 0.01，用户体验略有摩擦 |
 
-### 已修复（本轮）
+### 代码审查记录（本轮）
 
-| # | 修复 | 说明 |
-|---|------|------|
-| - | api-spec.yaml 8 项契约修复 | mock-login + pricing estimate + agreed + vehicle_name + price_breakdown + status_label/steps + base64 images + transmission 枚举对齐 |
-| - | P0-6 订单列表/详情 API 完成 | 两查询组合车辆信息 + OrderListItemDTO + OrderDetailVO + statusSteps + pickupAddress |
-| - | 5 个 P0 阻塞问题修复（代码审查） | P0-1 分页 total 修正 / P0-2 NPE 防御 / P0-3 OrderStatus 安全转换 / P0-4 参数校验 / P0-5 接入 PricingEngine |
-| - | Dashboard monthRevenue 实际查询 | 查询本月 completed 订单 totalPrice 总和 |
-| - | Admin 登录契约不一致 | 经核查契约只定义 password，实现一致，WONTFIX |
-| - | 首次引入单元测试（71 用例） | OrderStateMachine + OrderStatus + PricingEngine + ConflictChecker |
+| # | 严重度 | 问题 | 状态 |
+|---|--------|------|------|
+| 1 | P0 | 删除/下架操作无确认对话框 | ✅ 已修复 |
+| 2 | P0 | updatedAt 未格式化显示 | ✅ 已修复 |
+| 3 | P0 | 协议空状态（404）被当作错误处理 | ✅ 已修复 |
+| 4 | P0 | PUT 响应 code 未检查 | ✅ 已修复 |
+| 5 | P1 | API 响应码未检查（handleSubmit/loadVehicles） | ✅ 已修复 |
+| 6 | P1 | toggleStatus/deleteVehicle 错误处理缺失 | ✅ 已修复 |
+| 7 | P1 | 协议保存前未校验空内容 | ✅ 已修复 |
+| 8 | P1 | 保存失败未恢复原始内容 | ✅ 已修复 |
 
 ---
 
@@ -298,17 +331,19 @@
 
 | # | 任务 | 用户故事 | 类型 | 预估 | 状态 |
 |---|------|---------|------|------|------|
-| P1-1 | 完善管理员订单列表 API | US-10, US-23 | 后端 | 1h | 📋 |
-| P1-2 | 完善确认/拒绝/完成 API | US-10, US-23 | 后端 | 1h | 📋 |
-| P1-3 | 完善车辆 CRUD API | US-09 | 后端 | 1.5h | 📋 |
-| P1-4 | PC 管理端 - 车辆管理页 | US-09 | 前端 | 3h | 📋 |
-| P1-5 | PC 管理端 - 订单管理页 | US-10 | 前端 | 2h | 📋 |
-| P1-6 | PC 管理端 - 仪表盘 | US-08 | 前端 | 1h | 📋 |
-| P1-7 | 完善 Dashboard API | US-08, US-24 | 后端 | 0.5h | 📋 |
+| P1-1 | 完善管理员订单列表 API | US-10, US-23 | 后端 | 1h | ✅ 完成 |
+| P1-2 | 完善确认/拒绝/完成 API | US-10, US-23 | 后端 | 1h | ✅ 完成 |
+| P1-3 | 完善车辆 CRUD API | US-09 | 后端 | 1.5h | ✅ 完成（新增/编辑/上下架/删除/批量价格） |
+| P1-4 | PC 管理端 - 车辆管理页 | US-09 | 前端 | 3h | ✅ 完成（含新增/编辑弹窗） |
+| P1-5 | PC 管理端 - 订单管理页 | US-10 | 前端 | 2h | ✅ 完成 |
+| P1-6 | PC 管理端 - 仪表盘 | US-08 | 前端 | 1h | ✅ 完成 |
+| P1-7 | 完善 Dashboard API | US-08, US-24 | 后端 | 0.5h | ✅ 完成 |
 | P1-8 | 小程序管理端 - 订单处理 | US-12, US-13, US-23 | 前端 | 2h | 📋 |
 | P1-9 | 小程序管理端 TabBar | US-05, US-24 | 前端 | 1h | 📋 |
+| P1-10 | PC 管理端 - 价格设置页 | US-11 | 前端 | 2h | ✅ 完成 |
+| P1-11 | PC 管理端 - 协议管理页 | US-06 | 前端 | 0.5h | ✅ 完成 |
 
-**Sprint 2 总计**: ~13h
+**Sprint 2 进度**: 9/11 完成 (~11h/13h) | 🔄 进行中
 
 ---
 
@@ -321,10 +356,10 @@
 | P2-3 | 全局 loading + 错误处理 | US-25 | 前端 | 1h | 📋 |
 | P2-4 | 首页筛选（价格区间） | US-16 | 前端 | 0.5h | 📋 |
 | P2-5 | 取车地址可配置 | US-22 | 前后端 | 1h | 📋 |
-| P2-6 | PC 管理端 - 价格设置 | US-11 | 前端 | 2h | 📋 |
-| P2-7 | PC 管理端 - 协议管理 | US-06 | 前后端 | 1h | 📋 |
+| P2-6 | PC 管理端 - 价格设置 | US-11 | 前端 | 2h | ✅ 完成（Sprint 2 提前完成） |
+| P2-7 | PC 管理端 - 协议管理 | US-06 | 前后端 | 1h | ✅ 完成（Sprint 2 提前完成） |
 
-**Sprint 3 总计**: ~9.5h
+**Sprint 3 进度**: 2/7 完成（已提前到 Sprint 2 完成）| 📋 待开始
 
 ---
 
@@ -369,8 +404,11 @@
 | 取车地址 | MVP: 硬编码 → v1.5: 可配置 |
 | 管理端 | Sprint 1 不做管理页面，数据通过 SQL 初始化 |
 | TabBar 角色切换 | MVP: 页面级权限拦截 → v1.5: 动态 TabBar |
+| 管理后台状态管理 | 组件局部 ref，无需 Pinia（页面无跨组件共享状态） |
+| 价格批量更新 | 新建后端 API（PUT /vehicles/prices），保证原子性 |
+| 协议编辑器 | MVP textarea 纯文本，不支持 Markdown |
 
 ---
 
-*最后更新: 2026-04-11 (Sprint 1 后端全面收尾)*
+*最后更新: 2026-04-11 (Sprint 2 管理后台前端 3 项完成 + 代码审查修复)*
 *项目经理: Claude Code PM*
