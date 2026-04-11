@@ -34,6 +34,43 @@
 
 ---
 
+### 2026-04-11 收工 - Sprint 1 后端全面收尾（代码审查 + P0 修复 + 单元测试）
+
+**会话阶段**: 代码审查 + 架构方案 + 开发修复 + 测试验证
+**参与者**: 用户（需求确认）+ Claude Code（PM 调度，多 Agent 并行）
+
+#### 完成工作
+
+- **后端 P0-6 完成（订单列表/详情 API）**
+  - myOrders() 两查询组合：批量获取车辆信息 + OrderListItemDTO
+  - detail() 返回 OrderDetailVO：vehicle 嵌套对象、statusSteps、pickupAddress、canCancel
+  - 新增 toListDTO()、toDetailVO()、buildStatusSteps()、buildPickupAddress() 辅助方法
+
+- **后端代码审查 + 5 个 P0 修复**
+  - P0-1: 车辆列表分页 total 修正（先全量加载→内存过滤→内存分页）
+  - P0-2: 订单详情 NPE 防御（Objects.equals 替换 .equals）
+  - P0-3: OrderStatus.valueOf 安全转换（新增 fromValue + BusinessException）
+  - P0-4: CreateOrderRequest 参数校验（@Valid + @NotNull）
+  - P0-5: 接入 PricingEngine 替代手写算价逻辑
+
+- **P1 遗留问题修复**
+  - Dashboard monthRevenue 从硬编码零值改为实际查询 completed 订单总价
+  - Admin 登录契约不一致：经核查 api-spec.yaml 只定义 password 字段，当前实现一致，标记 WONTFIX
+
+- **首次引入单元测试（71 个用例，全部通过）**
+  - OrderStateMachineTest: 状态机合法/非法流转（33 用例）
+  - OrderStatusTest: getLabel + fromValue 安全转换（17 用例）
+  - SimplePricingEngineTest: 价格计算 + 边界条件（8 用例）
+  - OrderConflictCheckerTest: 冲突检测场景（13 用例）
+
+#### Git 提交
+- `21a7423` feat: P0-6 完成订单列表/详情 API
+- `bbd39fc` fix: 修复 5 个 P0 阻塞问题（代码审查）
+- `1fb8d69` docs: 更新进度 - 5 个 P0 Bug 修复完成
+- `84e3cd8` fix: Dashboard monthRevenue 实际查询 + 首次引入单元测试
+
+---
+
 ### 2026-04-11 收工 - P1/P2 审查问题修复 + 代码推送
 
 **会话阶段**: UI/UX 问题修复 + 代码审查闭环
@@ -222,10 +259,7 @@
 
 | # | 问题 | 优先级 | 说明 |
 |---|------|--------|------|
-| 1 | Admin 登录端点契约不一致 | P1 | API 要求 phone+password，当前只有 password |
-| 2 | Dashboard 缺少 monthRevenue | P1 | 概览接口数据不完整 |
-| 3 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
-| 4 | P0-6 订单列表/详情缺车辆信息组合 | P0 | 后端已完成两查询组合，前端已就绪 |
+| 1 | AdminVehicle PUT vs PATCH 语义 | P2 | 当前是全量替换，应支持部分更新 |
 
 ### 已修复（本轮）
 
@@ -234,6 +268,9 @@
 | - | api-spec.yaml 8 项契约修复 | mock-login + pricing estimate + agreed + vehicle_name + price_breakdown + status_label/steps + base64 images + transmission 枚举对齐 |
 | - | P0-6 订单列表/详情 API 完成 | 两查询组合车辆信息 + OrderListItemDTO + OrderDetailVO + statusSteps + pickupAddress |
 | - | 5 个 P0 阻塞问题修复（代码审查） | P0-1 分页 total 修正 / P0-2 NPE 防御 / P0-3 OrderStatus 安全转换 / P0-4 参数校验 / P0-5 接入 PricingEngine |
+| - | Dashboard monthRevenue 实际查询 | 查询本月 completed 订单 totalPrice 总和 |
+| - | Admin 登录契约不一致 | 经核查契约只定义 password，实现一致，WONTFIX |
+| - | 首次引入单元测试（71 用例） | OrderStateMachine + OrderStatus + PricingEngine + ConflictChecker |
 
 ---
 
@@ -335,5 +372,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (契约文档修复完成)*
+*最后更新: 2026-04-11 (Sprint 1 后端全面收尾)*
 *项目经理: Claude Code PM*
