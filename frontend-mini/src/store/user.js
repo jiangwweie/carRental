@@ -8,8 +8,50 @@ export const useUserStore = defineStore('user', () => {
 
   const isLoggedIn = ref(!!token.value)
 
+  /**
+   * Check if a valid token exists in storage.
+   * Returns true if logged in, false otherwise.
+   */
+  function checkLoginStatus() {
+    const savedToken = uni.getStorageSync('token') || ''
+    token.value = savedToken
+    isLoggedIn.value = !!savedToken
+    return !!savedToken
+  }
+
+  /**
+   * Mock login for development/testing.
+   * Calls POST /api/v1/auth/mock-login with phone and code.
+   */
+  async function mockLogin(data = {}) {
+    const res = await request({
+      url: '/api/v1/auth/mock-login',
+      method: 'POST',
+      data: {
+        phone: data.phone || '13800138000',
+        code: data.code || '123456'
+      }
+    })
+
+    token.value = res.token
+    userInfo.value = res.userInfo
+    isLoggedIn.value = true
+
+    uni.setStorageSync('token', res.token)
+    uni.setStorageSync('userInfo', res.userInfo)
+
+    return res
+  }
+
   async function login(phoneCode) {
-    // 先获取 loginCode
+    // Check environment variable for mock login mode
+    const useMockLogin = import.meta.env.VITE_USE_MOCK_LOGIN === 'true'
+
+    if (useMockLogin) {
+      return await mockLogin({ phone: '13800138000', code: '123456' })
+    }
+
+    // Real WeChat login flow
     const loginRes = await uni.login()
 
     const res = await request({
@@ -39,5 +81,5 @@ export const useUserStore = defineStore('user', () => {
     uni.removeStorageSync('userInfo')
   }
 
-  return { token, userInfo, isLoggedIn, login, logout }
+  return { token, userInfo, isLoggedIn, checkLoginStatus, mockLogin, login, logout }
 })
