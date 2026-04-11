@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin/dashboard")
@@ -55,6 +56,15 @@ public class DashboardController {
         monthWrapper.ge(OrderDO::getCreatedAt, startOfMonth);
         long monthOrders = orderMapper.selectCount(monthWrapper);
 
+        // 本月收入（已完成订单的总收入）
+        LambdaQueryWrapper<OrderDO> monthPaidWrapper = new LambdaQueryWrapper<>();
+        monthPaidWrapper.ge(OrderDO::getCreatedAt, startOfMonth)
+                .eq(OrderDO::getStatus, "completed");
+        BigDecimal monthRevenue = orderMapper.selectList(monthPaidWrapper).stream()
+                .map(OrderDO::getTotalPrice)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // 进行中订单
         LambdaQueryWrapper<OrderDO> activeWrapper = new LambdaQueryWrapper<>();
         activeWrapper.eq(OrderDO::getStatus, "in_progress");
@@ -67,7 +77,7 @@ public class DashboardController {
         result.put("today_orders", todayOrders);
         result.put("today_revenue", todayRevenue);
         result.put("month_orders", monthOrders);
-        result.put("month_revenue", BigDecimal.ZERO); // 简化实现
+        result.put("month_revenue", monthRevenue);
         result.put("active_orders", activeOrders);
         result.put("available_vehicles", availableVehicles);
 
