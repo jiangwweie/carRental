@@ -35,11 +35,12 @@ public class Order {
         this.status = OrderStatus.CONFIRMED;
     }
 
-    public void reject() {
+    public void reject(String reason) {
         if (this.status != OrderStatus.PENDING) {
             throw new IllegalStateException("只有待确认的订单可以拒绝");
         }
         this.status = OrderStatus.REJECTED;
+        this.rejectReason = reason;
     }
 
     public void cancel() {

@@ -40,6 +40,45 @@
 
 ---
 
+---
+
+### 2026-04-11 收工 - Sprint 2 后端 API 审查修复 + 节假日定价管理实现
+
+**会话阶段**: 架构师设计 + 4 Phase 并行开发 + 测试验证
+**参与者**: 用户（调度）+ Claude Code（PM + 架构师 + 开发）
+
+#### 完成工作
+
+- **Sprint 2 设计文档输出**（docs/arch/sprint2-4-design.md）
+  - 架构师出具节假日定价管理 + 协议版本递增详细设计
+  - 10 个新建文件 + 3 个修改文件的完整实现计划
+
+- **管理端 API 契约差距修复（5 项）**
+  - P0-1: AdminOrders DTO 补全 5 字段（userPhone/vehicleName/vehicleImage/days/statusLabel）+ 批量查询用户/车辆信息避免 N+1
+  - P0-3: Order.reject(reason) 新增 reason 参数，拒绝原因持久化
+  - P0-4: AdminVehicles 列表加分页（page/pageSize 参数 + {total, items} 响应）
+  - P0-5: PUT 改为部分更新（UpdateVehicleRequest + null 检查）
+  - P0-2: 分页已有，无需修复
+
+- **Feature 1: 节假日定价管理（P0-6）完整实现**
+  - Domain 层：Holiday.java（聚合 + calculatePrice/covers/overlapsWith）+ HolidayRepository 接口
+  - Infrastructure 层：HolidayConfigDO + HolidayConfigMapper + HolidayRepositoryImpl（@Transactional batchSave）
+  - Application 层：HolidayAdminService（校验 + 重叠检测 + 事务性批量创建）
+  - Controller 层：AdminPricingController（GET 列表/POST 创建/POST 批量）
+  - PricingEngine 升级：SimplePricingEngine 注入 HolidayRepository，实现节假日/周末/工作日差异化定价
+  - 定价优先级：fixed_price > weekend_price × multiplier > weekend_price > weekday_price
+
+- **Feature 2: 协议版本自动递增（P0-7）**
+  - AgreementController.update() version 从硬编码 "1.0" 改为 calculateNextVersion() 自动递增
+  - 返回值改为返回新协议 DTO（含新版本号）
+
+- **单元测试**
+  - 新增 HolidayTest（4 优先级定价 + 6 日期覆盖 + 8 重叠场景 = 18 用例）
+  - 重写 SimplePricingEngineTest（节假日/周末/工作日差异化定价场景 = 10 用例）
+  - **总计 91 个测试用例全部通过**（0 failures）
+
+---
+
 ## Sprint 1: Demo（已完成 ✅）
 
 ### 2026-04-11 收工 - 本地体验修复 + 微信开发者工具验证

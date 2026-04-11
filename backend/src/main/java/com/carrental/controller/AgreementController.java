@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class AgreementController {
      * 更新协议 (管理端)
      */
     @PutMapping("/admin/agreement")
-    public ApiResponse<Void> update(@RequestBody UpdateAgreementRequest request) {
+    public ApiResponse<AgreementDTO> update(@RequestBody UpdateAgreementRequest request) {
         // 先取消所有旧协议
         LambdaQueryWrapper<UserAgreementDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAgreementDO::getIsActive, true);
@@ -43,14 +45,44 @@ public class AgreementController {
             userAgreementMapper.updateById(oldAgreement);
         }
 
+        // 计算新版本号
+        String newVersion = calculateNextVersion();
+
         // 创建新协议
         UserAgreementDO newAgreement = new UserAgreementDO();
         newAgreement.setContent(request.getContent());
-        newAgreement.setVersion("1.0");
+        newAgreement.setVersion(newVersion);
         newAgreement.setIsActive(true);
         userAgreementMapper.insert(newAgreement);
 
-        return ApiResponse.success(null);
+        return ApiResponse.success(toDTO(newAgreement));
+    }
+
+    /**
+     * 计算下一个版本号，格式 major.minor
+     */
+    private String calculateNextVersion() {
+        List<UserAgreementDO> allAgreements = userAgreementMapper.selectList(null);
+        if (allAgreements.isEmpty()) {
+            return "1.0";
+        }
+        String maxVersion = allAgreements.stream()
+                .map(UserAgreementDO::getVersion)
+                .max(this::compareVersions)
+                .orElse("1.0");
+
+        String[] parts = maxVersion.split("\\.");
+        int major = Integer.parseInt(parts[0]);
+        int minor = Integer.parseInt(parts[1]);
+        return major + "." + (minor + 1);
+    }
+
+    private int compareVersions(String v1, String v2) {
+        String[] p1 = v1.split("\\.");
+        String[] p2 = v2.split("\\.");
+        int majorCmp = Integer.compare(Integer.parseInt(p1[0]), Integer.parseInt(p2[0]));
+        if (majorCmp != 0) return majorCmp;
+        return Integer.compare(Integer.parseInt(p1[1]), Integer.parseInt(p2[1]));
     }
 
     private AgreementDTO toDTO(UserAgreementDO agreementDO) {

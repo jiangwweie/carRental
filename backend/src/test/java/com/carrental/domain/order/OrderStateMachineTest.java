@@ -59,7 +59,7 @@ class OrderStateMachineTest {
         @Test
         @DisplayName("PENDING → REJECTED")
         void pendingToRejected() {
-            order.reject();
+            order.reject(null);
             assertEquals(OrderStatus.REJECTED, order.getStatus());
         }
     }
@@ -94,7 +94,7 @@ class OrderStateMachineTest {
         @Test
         @DisplayName("REJECTED 状态确认 - 抛异常")
         void confirm_fromRejected_throws() {
-            order.reject();
+            order.reject(null);
             assertThrows(IllegalStateException.class, () -> order.confirm());
         }
 
@@ -154,7 +154,7 @@ class OrderStateMachineTest {
         @Test
         @DisplayName("REJECTED 状态取消 - 抛异常")
         void cancel_fromRejected_throws() {
-            order.reject();
+            order.reject(null);
             assertThrows(IllegalStateException.class, () -> order.cancel());
         }
     }
@@ -168,29 +168,29 @@ class OrderStateMachineTest {
         @Test
         @DisplayName("PENDING 状态可以拒绝")
         void reject_fromPending_succeeds() {
-            order.reject();
+            order.reject(null);
             assertEquals(OrderStatus.REJECTED, order.getStatus());
         }
 
         @Test
         @DisplayName("REJECTED 状态再次拒绝 - 抛异常")
         void reject_fromRejected_throws() {
-            order.reject();
-            assertThrows(IllegalStateException.class, () -> order.reject());
+            order.reject(null);
+            assertThrows(IllegalStateException.class, () -> order.reject(null));
         }
 
         @Test
         @DisplayName("CANCELLED 状态拒绝 - 抛异常")
         void reject_fromCancelled_throws() {
             order.cancel();
-            assertThrows(IllegalStateException.class, () -> order.reject());
+            assertThrows(IllegalStateException.class, () -> order.reject(null));
         }
 
         @Test
         @DisplayName("CONFIRMED 状态拒绝 - 抛异常")
         void reject_fromConfirmed_throws() {
             order.confirm();
-            assertThrows(IllegalStateException.class, () -> order.reject());
+            assertThrows(IllegalStateException.class, () -> order.reject(null));
         }
     }
 
@@ -312,10 +312,10 @@ class OrderStateMachineTest {
         @Test
         @DisplayName("REJECTED 状态不能进行任何后续操作")
         void rejected_isTerminalState() {
-            order.reject();
+            order.reject(null);
             assertThrows(IllegalStateException.class, () -> order.confirm());
             assertThrows(IllegalStateException.class, () -> order.cancel());
-            assertThrows(IllegalStateException.class, () -> order.reject());
+            assertThrows(IllegalStateException.class, () -> order.reject(null));
             assertThrows(IllegalStateException.class, () -> order.start());
             assertThrows(IllegalStateException.class, () -> order.complete());
         }
@@ -326,7 +326,7 @@ class OrderStateMachineTest {
             order.cancel();
             assertThrows(IllegalStateException.class, () -> order.confirm());
             assertThrows(IllegalStateException.class, () -> order.cancel());
-            assertThrows(IllegalStateException.class, () -> order.reject());
+            assertThrows(IllegalStateException.class, () -> order.reject(null));
             assertThrows(IllegalStateException.class, () -> order.start());
             assertThrows(IllegalStateException.class, () -> order.complete());
         }
