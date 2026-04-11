@@ -154,6 +154,7 @@
 |---|------|------|
 | - | api-spec.yaml 8 项契约修复 | mock-login + pricing estimate + agreed + vehicle_name + price_breakdown + status_label/steps + base64 images + transmission 枚举对齐 |
 | - | P0-6 订单列表/详情 API 完成 | 两查询组合车辆信息 + OrderListItemDTO + OrderDetailVO + statusSteps + pickupAddress |
+| - | 5 个 P0 阻塞问题修复（代码审查） | P0-1 分页 total 修正 / P0-2 NPE 防御 / P0-3 OrderStatus 安全转换 / P0-4 参数校验 / P0-5 接入 PricingEngine |
 
 ---
 
