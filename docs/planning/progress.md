@@ -13,6 +13,37 @@
 
 ---
 
+### 2026-04-11 收工 - 契约合规修复（7 后端 + 7 前端 P0/P1/P2）
+
+**会话阶段**: 代码审查修复 + 前后端契约对齐
+**参与者**: 用户（调度）+ Claude Code（PM + 开发 + 测试）
+
+#### 完成工作
+
+- **根因定位**: Jackson SNAKE_CASE 全局配置缺失（导致 90%+ 字段命名不匹配）
+
+- **后端修复（6 文件）**
+  - `application.yml`: 新增 `spring.jackson.property-naming-strategy: SNAKE_CASE`（P0-1）
+  - `AuthController.java`: 新增 POST /auth/refresh 端点（P0-2, P1-16）
+  - `OrderController.java`: CreateOrderResult 补全 vehicleName/priceBreakdown/status（P0-3）
+  - `AdminVehicleController.java`: list() 增加 status 筛选（P1-8）
+  - `DashboardController.java`: 新增 pending_orders 统计（P1-9）
+  - `SubscriptionController.java`: record() 返回 {status:"accepted"} 替代 null（P1-14）
+
+- **前端修复（6 文件）**
+  - `orders.vue`: 替换 Mock 为真实 API + snake_case 映射 + tab 值修正（P0-4, P1-11）
+  - `booking.vue`: 价格映射 total_price/dailyRate + order_id 提取修正（P0-5, P1-13）
+  - `order-detail.vue`: 全字段 snake_case + 移除不存在字段（P0-6）
+  - `index.vue`: 查询参数改为 page/page_size + 分页逻辑修正（P0-7, P1-12）
+  - `auth.js`: refreshToken 改用 params 查询参数（P1-16）
+  - `agreement.vue`: 从后端 API 获取协议 + loading/错误处理 + 本地兜底（P2-22）
+
+- **测试验证**
+  - 后端编译通过 + 91 单元测试全部通过（0 failures）
+  - Git 推送: `0945853`
+
+---
+
 ### 2026-04-11 收工 - Sprint 2 管理后台前端 3 项完成 + 代码审查修复
 
 **会话阶段**: 架构师设计 + 3 Agent 并行开发 + 2 Agent 代码审查 + 自动修复
@@ -449,5 +480,5 @@
 
 ---
 
-*最后更新: 2026-04-11 (Sprint 2 管理后台前端 3 项完成 + 代码审查修复)*
+*最后更新: 2026-04-11 (契约合规修复 - 12 文件 + 91 测试通过)*
 *项目经理: Claude Code PM*
