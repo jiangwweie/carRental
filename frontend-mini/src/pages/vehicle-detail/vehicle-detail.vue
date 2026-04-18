@@ -111,7 +111,7 @@ const displayImages = computed(() => {
   if (!vehicle.value) return []
   if (vehicle.value.images && vehicle.value.images.length > 0) {
     // 拼接完整URL（小程序需要完整URL）
-    const BASE_URL = 'http://192.168.123.232:8081'
+    const BASE_URL = 'http://172.20.10.6:8081'
     return vehicle.value.images.map(img => {
       // 如果已经是完整URL，直接返回
       if (img.startsWith('http://') || img.startsWith('https://')) {

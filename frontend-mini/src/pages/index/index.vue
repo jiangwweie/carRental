@@ -141,7 +141,7 @@ async function loadVehicles(isRefresh = false, isLoadMore = false) {
     if (maxPrice !== null) params.maxPrice = maxPrice
     const res = await getVehicleList(params)
     // 拼接图片完整URL
-    const BASE_URL = 'http://192.168.123.232:8081'
+    const BASE_URL = 'http://172.20.10.6:8081'
     const itemsWithFullUrl = (res.items || []).map(item => ({
       ...item,
       coverImage: item.coverImage && !item.coverImage.startsWith('data:')

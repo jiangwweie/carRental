@@ -1,5 +1,5 @@
 // 开发环境使用局域网 IP，生产环境使用 localhost
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.123.232:8081'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://172.20.10.6:8081'
 
 let isLoading = false
 
