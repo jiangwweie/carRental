@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: car-rental
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 10MB
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:car_rental}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
@@ -16,7 +21,7 @@ spring:
     validate-on-migrate: true
 
   jackson:
-    property-naming-strategy: SNAKE_CASE
+    property-naming-strategy: LOWER_CAMEL_CASE
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
@@ -36,3 +41,24 @@ jwt:
 
 admin:
   password: ${ADMIN_PASSWORD:admin123}
+
+# 文件上传配置 (v1.6)
+upload:
+  # 存储类型: local (本地) / oss (阿里云)
+  type: local
+  # 本地存储配置
+  local:
+    # 上传根目录（相对于项目根目录或绝对路径）
+    base-path: ${UPLOAD_PATH:uploads}
+    # URL 前缀
+    url-prefix: /uploads
+  # 文件限制
+  limits:
+    # 最大文件大小 (字节) - 5MB
+    max-size: 5242880
+    # 允许的文件类型
+    allowed-types: jpg,jpeg,png,webp
+    # 最小图片尺寸
+    min-dimension: 100
+    # 最大图片尺寸
+    max-dimension: 4096

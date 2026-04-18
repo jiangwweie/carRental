@@ -50,11 +50,11 @@
         </view>
         <view class="info-row">
           <text class="label">订单状态</text>
-          <text class="value status-text" :class="'status-' + order.status">{{ order.status_label }}</text>
+          <text class="value status-text" :class="'status-' + order.status">{{ order.statusLabel }}</text>
         </view>
         <view class="info-row">
           <text class="label">创建时间</text>
-          <text class="value">{{ order.created_at }}</text>
+          <text class="value">{{ order.createdAt }}</text>
         </view>
       </view>
 
@@ -66,11 +66,11 @@
         </view>
         <view class="info-row">
           <text class="label">取车日期</text>
-          <text class="value">{{ order.start_date }}</text>
+          <text class="value">{{ order.startDate }}</text>
         </view>
         <view class="info-row">
           <text class="label">还车日期</text>
-          <text class="value">{{ order.end_date }}</text>
+          <text class="value">{{ order.endDate }}</text>
         </view>
         <view class="info-row">
           <text class="label">租赁天数</text>
@@ -83,12 +83,12 @@
         <text class="section-title">价格明细</text>
         <view class="price-detail-row">
           <text class="detail-label">车辆租金</text>
-          <text class="detail-value">{{ order.days }}天 × ¥{{ Math.round(order.total_price / order.days) }}</text>
+          <text class="detail-value">{{ order.days }}天 × ¥{{ Math.round(order.totalPrice / order.days) }}</text>
         </view>
         <view class="divider"></view>
         <view class="final-row">
           <text class="final-label">应付金额</text>
-          <text class="final-value">¥{{ order.total_price }}</text>
+          <text class="final-value">¥{{ order.totalPrice }}</text>
         </view>
       </view>
 
@@ -96,7 +96,7 @@
       <view class="address-card">
         <text class="section-title">取车地址</text>
         <view class="address-row">
-          <text class="address-text">{{ order.pickup_address?.address || '暂无地址' }}</text>
+          <text class="address-text">{{ order.pickupAddress?.address || '暂无地址' }}</text>
           <view class="copy-btn" @click="copyAddress">
             <text class="copy-icon">📋</text>
             <text class="copy-text">复制</text>
@@ -150,20 +150,6 @@ const progressSteps = [
 // 计算当前步骤索引
 const currentStepIndex = ref(0)
 
-// Mock 数据
-const mockOrder = {
-  id: 'ORD20260412001',
-  vehicle: { name: '特斯拉 Model 3' },
-  start_date: '2026-04-12',
-  end_date: '2026-04-15',
-  days: 3,
-  total_price: 1197,
-  status: 'pending',
-  status_label: '待确认',
-  created_at: '2026-04-11 15:30:00',
-  pickup_address: { address: 'XX市XX区XX路XX号', hours: '09:00-18:00', note: '' }
-}
-
 onLoad((options) => {
   orderId.value = options?.id || null
   fetchDetail()
@@ -181,19 +167,13 @@ async function fetchDetail() {
       order.value = res
       updateStepIndex()
     } else {
-      throw new Error('no orderId')
+      uni.showToast({ title: '订单ID不存在', icon: 'none' })
+      setTimeout(() => uni.navigateBack(), 1500)
     }
   } catch (err) {
-    console.warn('API 获取订单详情失败，尝试本地数据', err)
-    // 优先读取 booking 页存入的最新订单
-    const lastOrderStr = uni.getStorageSync('lastOrder')
-    if (lastOrderStr && orderId.value && orderId.value.startsWith('mock_order_')) {
-      const parsed = JSON.parse(lastOrderStr)
-      order.value = parsed
-    } else {
-      order.value = mockOrder
-    }
-    updateStepIndex()
+    // 错误已在 request.js 中处理并显示 Toast
+    console.warn('[FETCH_ORDER_ERROR]', err.message)
+    setTimeout(() => uni.navigateBack(), 1500)
   } finally {
     loading.value = false
   }
@@ -212,7 +192,7 @@ function updateStepIndex() {
 // 复制取车地址
 function copyAddress() {
   if (!order.value) return
-  const addr = order.value.pickup_address?.address || order.value.pickupAddress
+  const addr = order.value.pickupAddress?.address || '暂无地址'
   uni.setClipboardData({
     data: addr,
     success: () => {
@@ -234,11 +214,11 @@ async function onCancelOrder() {
         uni.showToast({ title: '订单已取消', icon: 'success' })
         // 刷新订单状态
         order.value.status = 'cancelled'
-        order.value.status_label = '已取消'
+        order.value.statusLabel = '已取消'
         currentStepIndex.value = -1
       } catch (err) {
-        console.error('取消订单失败', err)
-        uni.showToast({ title: '取消失败，请重试', icon: 'none' })
+        // 错误已在 request.js 中处理并显示 Toast
+        console.warn('[CANCEL_ORDER_ERROR]', err.message)
       }
     }
   })

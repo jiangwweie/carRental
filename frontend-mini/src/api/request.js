@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081'
+// 开发环境使用局域网 IP，生产环境使用 localhost
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.123.232:8081'
 
 let isLoading = false
 
@@ -28,24 +29,43 @@ function handle401() {
 }
 
 /**
- * Convert snake_case keys to camelCase.
- * Backend uses SNAKE_CASE naming strategy, frontend expects camelCase.
+ * Request wrapper for UniApp.
+ * Backend now returns camelCase directly (since v1.7).
  */
-function snakeToCamel(str) {
-  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+
+// 错误码映射表（后端错误码 → 用户友好文案）
+const ERROR_CODE_MAP = {
+  // 通用错误
+  4000: '输入信息有误，请检查后重试',
+  4003: '登录已过期，请重新登录',
+  4004: '请求的资源不存在',
+  4010: '您没有权限执行此操作',
+  5000: '服务器繁忙，请稍后重试',
+
+  // 认证相关
+  4001: '微信登录失败，请重试',
+  4002: '获取手机号失败，请重试',
+
+  // 订单相关
+  5200: '该时间段已被预订，请选择其他时间',
+  5300: '订单状态不允许此操作，请刷新页面',
+
+  // 支付相关
+  5100: '支付失败，请重试',
+  5101: '退款失败，请联系客服',
+
+  // 文件上传相关
+  4005: '仅支持 jpg、png、webp 格式的图片',
+  4006: '图片大小不能超过 5MB',
+  4007: '图片尺寸需在 100x100 到 4096x4096 之间',
+  5001: '上传失败，请重试'
 }
 
-function convertKeysToCamelCase(obj) {
-  if (obj === null || obj === undefined) return obj
-  if (Array.isArray(obj)) return obj.map(convertKeysToCamelCase)
-  if (typeof obj !== 'object') return obj
-
-  const result = {}
-  for (const key of Object.keys(obj)) {
-    const camelKey = snakeToCamel(key)
-    result[camelKey] = convertKeysToCamelCase(obj[key])
-  }
-  return result
+/**
+ * 获取用户友好的错误提示
+ */
+function getFriendlyErrorMessage(code, defaultMessage) {
+  return ERROR_CODE_MAP[code] || defaultMessage || '操作失败，请重试'
 }
 
 export function request(options) {
@@ -82,15 +102,31 @@ export function request(options) {
         }
 
         if (res.data.code === 0) {
-          // Convert backend snake_case response to camelCase for frontend consistency
-          resolve(convertKeysToCamelCase(res.data.data))
+          // Backend returns camelCase directly since v1.7
+          resolve(res.data.data)
         } else {
           // 401 / token expired in business response
           if (isUnauthorized(res.data.message)) {
             handle401()
           }
-          uni.showToast({ title: res.data.message || '请求失败', icon: 'none' })
-          reject(new Error(res.data.message))
+
+          // 获取用户友好的错误提示
+          const friendlyMessage = getFriendlyErrorMessage(res.data.code, res.data.message)
+
+          uni.showToast({
+            title: friendlyMessage,
+            icon: 'none',
+            duration: 2500
+          })
+
+          // 使用 console.warn 而非 console.error，避免打印堆栈
+          console.warn('[API_ERROR]', {
+            code: res.data.code,
+            message: res.data.message,
+            friendlyMessage
+          })
+
+          reject(new Error(friendlyMessage))
         }
       },
       fail(err) {

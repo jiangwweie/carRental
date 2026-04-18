@@ -128,21 +128,8 @@ const agreed = ref(false)
 // 提交中状态
 const submitting = ref(false)
 
-// Mock 数据
-const mockPrice = {
-  vehicleId: 1,
-  vehicleName: '特斯拉 Model 3',
-  days: 3,
-  startDate: '2026-04-12',
-  endDate: '2026-04-15',
-  dailyRate: 399,
-  totalAmount: 1197,
-  discount: 0,
-  finalAmount: 1197
-}
-
-// 价格数据（优先用 API，降级用 Mock）
-const priceData = ref({ ...mockPrice })
+// 价格数据
+const priceData = ref({})
 
 onLoad((options) => {
   vehicleId.value = options?.vehicleId || null
@@ -158,38 +145,32 @@ async function fetchPrice() {
   try {
     if (vehicleId.value) {
       const res = await estimatePrice({
-        vehicle_id: parseInt(vehicleId.value, 10),
-        start_date: startDate.value,
-        end_date: endDate.value
+        vehicleId: parseInt(vehicleId.value, 10),
+        startDate: startDate.value,
+        endDate: endDate.value
       })
       const daysCount = res.days || days.value || 1
-      const totalPrice = res.total_price || 0
+      const totalPrice = res.totalPrice || 0
       const dailyRate = daysCount > 0 ? Math.round(totalPrice / daysCount) : 0
       priceData.value = {
-        vehicleId: res.vehicle_id || vehicleId.value,
-        vehicleName: res.vehicle_name || '未知车辆',
+        vehicleId: res.vehicleId || vehicleId.value,
+        vehicleName: res.vehicleName || '未知车辆',
         days: daysCount,
-        startDate: res.start_date || startDate.value,
-        endDate: res.end_date || endDate.value,
+        startDate: res.startDate || startDate.value,
+        endDate: res.endDate || endDate.value,
         dailyRate,
         totalAmount: totalPrice,
         discount: 0,
         finalAmount: totalPrice
       }
     } else {
-      throw new Error('no vehicleId')
+      uni.showToast({ title: '车辆ID不存在', icon: 'none' })
+      setTimeout(() => uni.navigateBack(), 1500)
     }
   } catch (err) {
-    console.warn('API 获取价格失败，使用 Mock 数据', err)
-    priceData.value = {
-      ...mockPrice,
-      vehicleId: vehicleId.value || mockPrice.vehicleId,
-      days: days.value || mockPrice.days,
-      startDate: startDate.value || mockPrice.startDate,
-      endDate: endDate.value || mockPrice.endDate,
-      totalAmount: (days.value || mockPrice.days) * mockPrice.dailyRate,
-      finalAmount: (days.value || mockPrice.days) * mockPrice.dailyRate
-    }
+    // 错误已在 request.js 中处理并显示 Toast
+    console.warn('[FETCH_PRICE_ERROR]', err.message)
+    setTimeout(() => uni.navigateBack(), 1500)
   }
 }
 
@@ -212,54 +193,23 @@ async function onSubmit() {
 
   try {
     const res = await createOrder({
-      vehicle_id: parseInt(vehicleId.value, 10),
-      start_date: startDate.value,
-      end_date: endDate.value,
+      vehicleId: parseInt(vehicleId.value, 10),
+      startDate: startDate.value,
+      endDate: endDate.value,
       agreed: agreed.value
     })
 
     uni.showToast({ title: '订单提交成功', icon: 'success' })
 
     // 跳转到订单详情页
-    const orderId = res?.order_id || 1
+    const orderId = res?.orderId || res?.id
     setTimeout(() => {
       uni.navigateTo({ url: `/pages/order-detail/order-detail?id=${orderId}` })
     }, 800)
   } catch (err) {
-    console.error('提交订单失败，降级到 Mock', err)
-    uni.showToast({
-      title: '模拟提交订单（后端未启动）',
-      icon: 'none',
-      duration: 2000
-    })
-
-    // 生成 Mock 订单
-    const mockOrderData = {
-      id: `mock_order_${Date.now()}`,
-      orderNo: `CAR${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-      vehicleName: priceData.value.vehicleName,
-      vehicleBrand: '',
-      startDate: priceData.value.startDate,
-      endDate: priceData.value.endDate,
-      days: priceData.value.days,
-      totalAmount: priceData.value.totalAmount,
-      discount: priceData.value.discount,
-      finalAmount: priceData.value.finalAmount,
-      status: 'pending',
-      statusText: '待确认',
-      createdAt: new Date().toLocaleString('zh-CN'),
-      pickupAddress: 'XX市XX区XX路XX号'
-    }
-
-    // 存到本地供订单详情页读取
-    uni.setStorageSync('lastOrder', JSON.stringify(mockOrderData))
-
-    // 跳转到订单详情页
-    setTimeout(() => {
-      uni.navigateTo({
-        url: `/pages/order-detail/order-detail?id=${mockOrderData.id}`
-      })
-    }, 1000)
+    // 错误已在 request.js 中处理并显示 Toast
+    // 这里仅记录日志，不再重复提示
+    console.warn('[BOOKING_ERROR]', err.message)
   } finally {
     submitting.value = false
   }

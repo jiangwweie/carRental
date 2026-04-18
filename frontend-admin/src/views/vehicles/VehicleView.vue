@@ -16,7 +16,7 @@
     </el-table>
     <el-button type="primary" @click="showAddDialog">新增车辆</el-button>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑车辆' : '新增车辆'" width="600px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑车辆' : '新增车辆'" width="650px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="车型名称" prop="name">
           <el-input v-model="form.name" />
@@ -37,7 +37,11 @@
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="图片" prop="images">
-          <el-input v-model="imagesInput" type="textarea" :rows="3" placeholder="每行一个图片 URL/base64" />
+          <ImageUploader
+            v-model="form.images"
+            :vehicle-id="editingId"
+            :max-count="5"
+          />
         </el-form-item>
         <el-form-item label="标签" prop="tags">
           <el-select v-model="form.tags" multiple filterable allow-create placeholder="请选择或输入标签" style="width: 100%">
@@ -71,6 +75,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import ImageUploader from '@/components/ImageUploader.vue'
 
 const vehicles = ref([])
 
@@ -92,7 +97,6 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref(null)
 const formRef = ref(null)
-const imagesInput = ref('')
 
 const emptyForm = () => ({
   name: '',
@@ -100,6 +104,7 @@ const emptyForm = () => ({
   seats: 2,
   transmission: '',
   description: '',
+  images: [],
   tags: [],
   weekdayPrice: 0,
   weekendPrice: 0,
@@ -122,7 +127,6 @@ function showAddDialog() {
   isEdit.value = false
   editingId.value = null
   form.value = emptyForm()
-  imagesInput.value = ''
   dialogVisible.value = true
 }
 
@@ -135,12 +139,12 @@ function showEditDialog(row) {
     seats: row.seats ?? 2,
     transmission: row.transmission || '',
     description: row.description || '',
+    images: Array.isArray(row.images) ? [...row.images] : [],
     tags: Array.isArray(row.tags) ? [...row.tags] : [],
     weekdayPrice: row.weekdayPrice ?? 0,
     weekendPrice: row.weekendPrice ?? 0,
     holidayPrice: row.holidayPrice ?? 0
   }
-  imagesInput.value = Array.isArray(row.images) ? row.images.join('\n') : ''
   dialogVisible.value = true
 }
 
@@ -159,11 +163,11 @@ async function handleSubmit() {
     seats: form.value.seats,
     transmission: form.value.transmission,
     description: form.value.description,
-    images: imagesInput.value.split('\n').map(s => s.trim()).filter(Boolean),
+    images: form.value.images,
     tags: form.value.tags,
-    weekday_price: form.value.weekdayPrice,
-    weekend_price: form.value.weekendPrice,
-    holiday_price: form.value.holidayPrice
+    weekdayPrice: form.value.weekdayPrice,
+    weekendPrice: form.value.weekendPrice,
+    holidayPrice: form.value.holidayPrice
   }
 
   try {

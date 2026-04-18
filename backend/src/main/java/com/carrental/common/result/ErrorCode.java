@@ -24,7 +24,13 @@ public enum ErrorCode {
 
     // 支付相关 (v1.5)
     PAY_FAILED(5100, "微信支付失败"),
-    REFUND_FAILED(5101, "退款失败");
+    REFUND_FAILED(5101, "退款失败"),
+
+    // 文件上传相关 (v1.6)
+    FILE_TYPE_NOT_SUPPORTED(4005, "文件类型不支持"),
+    FILE_SIZE_EXCEEDED(4006, "文件大小超过限制"),
+    IMAGE_DIMENSION_INVALID(4007, "图片尺寸不符合要求"),
+    FILE_UPLOAD_FAILED(5001, "文件上传失败");
 
     private final int code;
     private final String message;

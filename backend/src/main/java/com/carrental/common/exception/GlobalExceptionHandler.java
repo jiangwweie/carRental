@@ -2,6 +2,7 @@ package com.carrental.common.exception;
 
 import com.carrental.common.result.ApiResponse;
 import com.carrental.common.result.ErrorCode;
+import com.carrental.infrastructure.storage.StorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +15,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ApiResponse<?> handleBusinessException(BusinessException e) {
         log.warn("Business exception: code={}, message={}", e.getCode(), e.getMessage());
+        return ApiResponse.error(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ApiResponse<?> handleStorageException(StorageException e) {
+        log.warn("Storage exception: code={}, message={}", e.getCode(), e.getMessage());
         return ApiResponse.error(e.getCode(), e.getMessage());
     }
 

@@ -20,3 +20,7 @@ dist/
 # Java
 target/
 *.class
+
+# Uploads - ignore files but keep directory structure
+backend/uploads/vehicles/*
+!backend/uploads/.gitkeep

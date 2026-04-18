@@ -75,45 +75,6 @@
 import { ref, onMounted } from 'vue'
 import { getVehicleList } from '../../api/vehicle.js'
 
-// Mock data
-const MOCK_VEHICLES = [
-  {
-    id: '1',
-    name: '丰田 卡罗拉',
-    coverImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2U4ZjVlOSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+atTwvdGV4dD48L3N2Zz4=',
-    weekdayPrice: 158,
-    description: '省油耐用，适合日常通勤'
-  },
-  {
-    id: '2',
-    name: '本田 雅阁',
-    coverImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VjZjJmZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+arTwvdGV4dD48L3N2Zz4=',
-    weekdayPrice: 238,
-    description: '商务出行，舒适大气'
-  },
-  {
-    id: '3',
-    name: '特斯拉 Model 3',
-    coverImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2YzZTRmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+4p2M8J+ajzwvdGV4dD48L3N2Zz4=',
-    weekdayPrice: 398,
-    description: '智能电动，科技驾驶'
-  },
-  {
-    id: '4',
-    name: '大众 途观L',
-    coverImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2ZmZjNlMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+agTwvdGV4dD48L3N2Zz4=',
-    weekdayPrice: 288,
-    description: '宽敞SUV，家庭出游首选'
-  },
-  {
-    id: '5',
-    name: '宝马 3系',
-    coverImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iI2VhZjJmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+ahTwvdGV4dD48L3N2Zz4=',
-    weekdayPrice: 458,
-    description: '豪华驾控，品质之选'
-  }
-]
-
 // 日期相关
 const today = new Date()
 const formatDate = (d) => {
@@ -135,7 +96,6 @@ const loading = ref(true)
 const refreshing = ref(false)
 const loadingMore = ref(false)
 const noMore = ref(false)
-const useMock = ref(false) // 开发阶段使用 Mock 数据
 
 // 价格区间筛选
 const priceRanges = [
@@ -173,46 +133,30 @@ async function loadVehicles(isRefresh = false, isLoadMore = false) {
   const maxPrice = currentRange.max
 
   try {
-    if (useMock.value) {
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 600))
-      let result = [...MOCK_VEHICLES]
-      if (minPrice !== null) {
-        result = result.filter(v => v.weekdayPrice >= minPrice)
-      }
-      if (maxPrice !== null) {
-        result = result.filter(v => v.weekdayPrice < maxPrice)
-      }
-      vehicles.value = result
-      noMore.value = true
+    const params = {
+      page: isLoadMore ? Math.ceil(vehicles.value.length / 10) + 1 : 1,
+      pageSize: 10
+    }
+    if (minPrice !== null) params.minPrice = minPrice
+    if (maxPrice !== null) params.maxPrice = maxPrice
+    const res = await getVehicleList(params)
+    // 拼接图片完整URL
+    const BASE_URL = 'http://192.168.123.232:8081'
+    const itemsWithFullUrl = (res.items || []).map(item => ({
+      ...item,
+      coverImage: item.coverImage && !item.coverImage.startsWith('data:')
+        ? (item.coverImage.startsWith('http') ? item.coverImage : BASE_URL + item.coverImage)
+        : item.coverImage
+    }))
+    if (isLoadMore) {
+      vehicles.value = [...vehicles.value, ...itemsWithFullUrl]
     } else {
-      const params = {
-        page: isLoadMore ? Math.ceil(vehicles.value.length / 10) + 1 : 1,
-        page_size: 10
-      }
-      if (minPrice !== null) params.minPrice = minPrice
-      if (maxPrice !== null) params.maxPrice = maxPrice
-      const res = await getVehicleList(params)
-      if (isLoadMore) {
-        vehicles.value = [...vehicles.value, ...(res.items || [])]
-      } else {
-        vehicles.value = res.items || []
-      }
-      noMore.value = (res.items || []).length < 10
+      vehicles.value = itemsWithFullUrl
     }
+    noMore.value = (res.items || []).length < 10
   } catch (err) {
-    console.error('加载车辆列表失败，使用Mock数据', err)
-    // API 失败时降级到 Mock
-    useMock.value = true
-    let result = [...MOCK_VEHICLES]
-    if (minPrice !== null) {
-      result = result.filter(v => v.weekdayPrice >= minPrice)
-    }
-    if (maxPrice !== null) {
-      result = result.filter(v => v.weekdayPrice < maxPrice)
-    }
-    vehicles.value = result
-    noMore.value = true
+    // 错误已在 request.js 中处理并显示 Toast
+    console.warn('[LOAD_VEHICLES_ERROR]', err.message)
   } finally {
     loading.value = false
     refreshing.value = false

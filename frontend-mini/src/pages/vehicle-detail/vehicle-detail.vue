@@ -110,25 +110,23 @@ const totalPrice = computed(() => {
 const displayImages = computed(() => {
   if (!vehicle.value) return []
   if (vehicle.value.images && vehicle.value.images.length > 0) {
-    return vehicle.value.images
+    // 拼接完整URL（小程序需要完整URL）
+    const BASE_URL = 'http://192.168.123.232:8081'
+    return vehicle.value.images.map(img => {
+      // 如果已经是完整URL，直接返回
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        return img
+      }
+      // 如果是data:image格式，直接返回
+      if (img.startsWith('data:')) {
+        return img
+      }
+      // 否则拼接BASE_URL
+      return BASE_URL + img
+    })
   }
   return ['data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==']
 })
-
-// Mock 数据
-const mockVehicle = {
-  id: 1,
-  name: '特斯拉 Model 3',
-  brand: 'Tesla',
-  tags: ['电动车', '自动驾驶', '豪华'],
-  description: '纯电动车，续航 556km，自动驾驶辅助系统，全景玻璃车顶，内饰简约科技感十足。',
-  weekdayPrice: 399,
-  weekendPrice: 499,
-  seats: 5,
-  transmission: '自动',
-  images: [],
-  status: 'available'
-}
 
 onLoad((options) => {
   vehicleId.value = options?.id || null
@@ -142,11 +140,13 @@ async function fetchDetail() {
       const res = await getVehicleDetail(vehicleId.value)
       vehicle.value = res
     } else {
-      throw new Error('no id')
+      uni.showToast({ title: '车辆ID不存在', icon: 'none' })
+      setTimeout(() => uni.navigateBack(), 1500)
     }
   } catch (err) {
-    console.warn('API 获取失败，使用 Mock 数据', err)
-    vehicle.value = mockVehicle
+    // 错误已在 request.js 中处理并显示 Toast
+    console.warn('[FETCH_VEHICLE_ERROR]', err.message)
+    setTimeout(() => uni.navigateBack(), 1500)
   } finally {
     loading.value = false
   }

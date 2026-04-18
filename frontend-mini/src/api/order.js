@@ -3,9 +3,9 @@ import { request } from './request.js'
 /**
  * 创建订单
  * @param {Object} data - 订单参数
- * @param {number} data.vehicle_id - 车辆 ID
- * @param {string} data.start_date - 取车日期 (YYYY-MM-DD)
- * @param {string} data.end_date - 还车日期 (YYYY-MM-DD)
+ * @param {number} data.vehicleId - 车辆 ID
+ * @param {string} data.startDate - 取车日期 (YYYY-MM-DD)
+ * @param {string} data.endDate - 还车日期 (YYYY-MM-DD)
  * @param {boolean} data.agreed - 是否同意用户协议
  * @returns {Promise} 订单创建结果
  */

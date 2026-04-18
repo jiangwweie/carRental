@@ -23,20 +23,20 @@
       <view v-for="order in filteredOrders" :key="order.id" class="order-card" @click="goDetail(order.id)">
         <view class="order-header">
           <text class="order-no">订单号: {{ order.id }}</text>
-          <text class="order-status" :class="'status-' + order.status">{{ order.status_label }}</text>
+          <text class="order-status" :class="'status-' + order.status">{{ order.statusLabel }}</text>
         </view>
         <view class="order-body">
           <view class="vehicle-info">
-            <text class="vehicle-name">{{ order.vehicle_name }}</text>
+            <text class="vehicle-name">{{ order.vehicleName }}</text>
           </view>
-          <text class="order-amount">¥{{ order.total_price }}</text>
+          <text class="order-amount">¥{{ order.totalPrice }}</text>
         </view>
         <view class="order-dates">
-          <text class="date-text">{{ order.start_date }} ~ {{ order.end_date }}</text>
+          <text class="date-text">{{ order.startDate }} ~ {{ order.endDate }}</text>
           <text class="days-text">共 {{ order.days }} 天</text>
         </view>
         <view class="order-footer" v-if="order.status === 'pending'">
-          <view class="order-created">{{ order.created_at }} 创建</view>
+          <view class="order-created">{{ order.createdAt }} 创建</view>
           <view class="cancel-btn" @click.stop="handleCancel(order.id)">取消</view>
         </view>
       </view>
@@ -95,10 +95,11 @@ onMounted(async () => {
     const res = await getOrders()
     orders.value = (res.items || []).map(item => ({
       ...item,
-      status_label: item.status_label || statusLabelMap[item.status] || item.status
+      statusLabel: item.statusLabel || statusLabelMap[item.status] || item.status
     }))
   } catch (err) {
-    console.error('加载订单列表失败', err)
+    // 错误已在 request.js 中处理并显示 Toast
+    console.warn('[LOAD_ORDERS_ERROR]', err.message)
     orders.value = []
   } finally {
     loading.value = false
@@ -124,8 +125,8 @@ async function handleCancel(id) {
           }
           uni.showToast({ title: '订单已取消', icon: 'success' })
         } catch (err) {
-          console.error('取消订单失败', err)
-          uni.showToast({ title: '取消失败，请重试', icon: 'none' })
+          // 错误已在 request.js 中处理并显示 Toast
+          console.warn('[CANCEL_ORDER_ERROR]', err.message)
         }
       }
     }

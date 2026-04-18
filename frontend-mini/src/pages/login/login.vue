@@ -69,6 +69,7 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/user.js'
+import { mockLogin } from '../../api/auth.js'
 
 const agreed = ref(false)
 const phone = ref('13800138000')
@@ -123,7 +124,6 @@ async function onLogin() {
   try {
     // Use backend mock-login API to get a real JWT token
     // In production, this will be replaced with real WeChat login
-    const { mockLogin } = await import('../../api/auth.js')
     const res = await mockLogin({ role: 'user' })
 
     // Store token and user info from backend response
@@ -164,14 +164,34 @@ async function onWechatLogin(e) {
   if (e.detail.code) {
     loading.value = true
     try {
-      await userStore.login(e.detail.code)
+      // 尝试真实微信登录
+      const res = await userStore.login(e.detail.code)
       uni.showToast({ title: '登录成功', icon: 'success' })
       setTimeout(() => {
         navigateAfterLogin(redirectUrl.value)
       }, 500)
     } catch (err) {
-      console.error('微信登录失败', err)
-      uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+      console.warn('微信登录失败，降级到 Mock 登录', err.message)
+
+      // 降级到 Mock 登录
+      try {
+        const res = await mockLogin({ role: 'user' })
+        uni.setStorageSync('token', res.token)
+        uni.setStorageSync('userInfo', JSON.stringify(res.user))
+        userStore.checkLoginStatus()
+
+        uni.showToast({
+          title: '已使用 Mock 登录',
+          icon: 'none',
+          duration: 2000
+        })
+        setTimeout(() => {
+          navigateAfterLogin(redirectUrl.value)
+        }, 500)
+      } catch (mockErr) {
+        console.error('Mock 登录也失败', mockErr)
+        uni.showToast({ title: '登录失败，请重试', icon: 'none' })
+      }
     } finally {
       loading.value = false
     }
